@@ -14,7 +14,6 @@ from adafruit_lsm6ds.lsm6dsox import LSM6DSOX
 print("I guess all of the packages loaded! (:")
 
 # Make sure to replace with your schools ID (Whatever you want, just not the same as someone else)
-# Known id's: "hhs", "rhs"
 school_id = "hhs"
 
 #Setup Send LED
