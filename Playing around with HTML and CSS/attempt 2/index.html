@@ -1,0 +1,226 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>EV Live Data Dashboard</title>
+    <style>
+        /* Speedometer Styles */
+        .speedometer {
+            position: relative;
+            width: 200px;
+            height: 200px;
+            border: 10px solid #333;
+            border-radius: 50%;
+            background: #fff;
+            margin: 20px auto;
+        }
+
+        .needle {
+            position: absolute;
+            width: 4px;
+            height: 100px;
+            background: #ff0000;
+            top: 50%;
+            left: 50%;
+            transform-origin: bottom center;
+            transform: rotate(0deg);
+            transition: transform 0.5s ease-in-out;
+        }
+
+        .center-circle {
+            position: absolute;
+            width: 20px;
+            height: 20px;
+            background: #333;
+            border-radius: 50%;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+        }
+
+        .speed-text {
+            position: absolute;
+            width: 100%;
+            text-align: center;
+            top: 80%;
+            font-size: 24px;
+        }
+
+        /* Odometer Styles */
+        .odometer {
+            text-align: center;
+            margin: 20px 0;
+            font-size: 20px;
+        }
+
+        /* Gauge Styles */
+        .gauge-container {
+            margin: 10px 0;
+            text-align: center;
+        }
+
+        .gauge {
+            width: 100%;
+            height: 20px;
+            background: #ccc;
+            position: relative;
+            margin: 10px auto;
+        }
+
+        .gauge-bar {
+            height: 100%;
+            background: #ff4500;
+            width: 0;
+            transition: width 0.5s ease-in-out;
+        }
+
+        .gauge-label {
+            text-align: center;
+            margin-top: 5px;
+        }
+
+        /* Pedal Styles */
+        .pedal-container {
+            margin: 20px 0;
+            text-align: center;
+        }
+
+        .pedal-bar {
+            width: 0;
+            height: 20px;
+            background: #32CD32;
+            margin: 5px auto;
+            transition: width 0.5s ease-in-out;
+        }
+
+        .brake-bar {
+            background: #DC143C;
+        }
+
+        /* Info Box Styles */
+        .info {
+            text-align: center;
+            margin: 20px 0;
+            font-size: 20px;
+        }
+    </style>
+</head>
+<body>
+
+    <!-- Speedometer -->
+    <div class="speedometer">
+        <div class="needle"></div>
+        <div class="center-circle"></div>
+        <div class="speed-text">0 MPH</div>
+    </div>
+
+    <!-- Odometers -->
+    <div class="odometer">
+        <div>Miles: <span id="miles">0</span></div>
+        <div>Amp-Hours: <span id="amphours">0</span></div>
+    </div>
+
+    <!-- Gauges -->
+    <div class="gauge-container">
+        <div class="gauge">
+            <div class="gauge-bar" id="batteryTemp1"></div>
+        </div>
+        <div class="gauge-label">Battery Temp 1</div>
+    </div>
+
+    <div class="gauge-container">
+        <div class="gauge">
+            <div class="gauge-bar" id="batteryTemp2"></div>
+        </div>
+        <div class="gauge-label">Battery Temp 2</div>
+    </div>
+
+    <div class="gauge-container">
+        <div class="gauge">
+            <div class="gauge-bar" id="motorTemp"></div>
+        </div>
+        <div class="gauge-label">Motor Temp</div>
+    </div>
+
+    <div class="gauge-container">
+        <div class="gauge">
+            <div class="gauge-bar" id="voltage"></div>
+        </div>
+        <div class="gauge-label">Voltage</div>
+    </div>
+
+    <div class="gauge-container">
+        <div class="gauge">
+            <div class="gauge-bar" id="amps"></div>
+        </div>
+        <div class="gauge-label">Amps</div>
+    </div>
+
+    <!-- Pedal Visuals -->
+    <div class="pedal-container">
+        <div>Throttle: <div class="pedal-bar" id="throttle-bar"></div></div>
+        <div>Brake: <div class="pedal-bar brake-bar" id="brake-bar"></div></div>
+    </div>
+
+    <!-- Info Boxes -->
+    <div class="info">
+        <div>Current Time: <span id="current-time">00:00:00</span></div>
+        <div>Counter: <span id="counter">0</span></div>
+    </div>
+
+    <script>
+        // Dummy data fetching function (replace with actual data fetching)
+        function fetchData() {
+            return {
+                speed: 20,
+                miles: 120,
+                amphours: 35,
+                batteryTemp1: 70,
+                batteryTemp2: 65,
+                motorTemp: 80,
+                voltage: 400,
+                amps: 200,
+                throttle: 50,
+                brake: 20,
+                currentTime: '12:34:56',
+                counter: 1234
+            };
+        }
+
+        // Function to update the dashboard with new data
+        function updateDashboard(data) {
+            // Update speedometer
+            const speedDeg = (data.speed / 100) * 180; // Convert speed to degrees
+            document.querySelector('.needle').style.transform = `rotate(${speedDeg}deg)`;
+            document.querySelector('.speed-text').innerText = `${data.speed} MPH`;
+
+            // Update odometers
+            document.getElementById('miles').innerText = data.miles;
+            document.getElementById('amphours').innerText = data.amphours;
+
+            // Update gauges
+            document.getElementById('batteryTemp1').style.width = `${data.batteryTemp1}%`;
+            document.getElementById('batteryTemp2').style.width = `${data.batteryTemp2}%`;
+            document.getElementById('motorTemp').style.width = `${data.motorTemp}%`;
+            document.getElementById('voltage').style.width = `${(data.voltage / 500) * 100}%`; // Assuming max voltage is 500
+            document.getElementById('amps').style.width = `${(data.amps / 300) * 100}%`; // Assuming max amps is 300
+
+            // Update pedal visuals
+            document.getElementById('throttle-bar').style.width = `${data.throttle}%`;
+            document.getElementById('brake-bar').style.width = `${data.brake}%`;
+
+            // Update time and counter
+            document.getElementById('current-time').innerText = data.currentTime;
+            document.getElementById('counter').innerText = data.counter;
+        }
+
+        // Simulate live data updates
+        setInterval(() => {
+            const data = fetchData();
+            updateDashboard(data);
+        }, 800); // Update every 0.8 seconds
+    </script>
+
+</body>
+</html>
