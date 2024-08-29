@@ -51,25 +51,6 @@ while os.path.exists(f"/home/car/logs/{index:03}.data.log"):
 new_file_name = f"/home/car/logs/{index:03}.data.log"
 logging.basicConfig(filename=new_file_name, filemode='w', format='%(message)s')
 
-def imuPull():
-    try:
-        data = (
-                str(round(imu.acceleration[0],2))
-                +","+
-                str(round(imu.acceleration[1],2))
-                +","+
-                str(round(imu.acceleration[2],2))
-                +","+
-                str(round(imu.gyro[0],2))
-                +","+
-                str(round(imu.gyro[1],2))
-                +","+
-                str(round(imu.gyro[2],2))
-                )
-        return f"imu,{data}|"
-    except:
-        return f"imu,None,None,None,None,None,None|"
-
 def UART():
     # Send output as: "CA,amp_hours,voltage,current,speed,miles|"
     # data = cycleAnalyst.read(10)
@@ -122,7 +103,6 @@ while running:
 
     data_2_send = f"{school_id}|" 
     data_2_send += analogPull()
-    data_2_send += imuPull()
     data_2_send += UART()
     
     sendRF(data_2_send)
