@@ -1,0 +1,129 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <link rel="stylesheet" href="./style.css">
+    <link rel="icon" type="image/x-icon" href="./harrisonburg.ico">
+
+    <title>EV Data Page Layout</title>
+
+    <!-- Include p5.js -->
+    <script src="./p5.libs/p5.min.js"></script>
+    <!-- Include p5.play.js -->
+    <!-- <script src="./p5.libs/planck.min.js"></script> -->
+    <!-- Include p5.play.js -->
+    <!-- <script src="./p5.libs/p5.play.js"></script> -->
+    <!-- Include Dropdown selection -->
+    <script src="./dropdown.js"></script>
+    <script src="./objects.js"></script>
+</head>
+<body>
+
+
+<script src="https://ajax.googleapis.com/ajax/libs/jquery/3.5.1/jquery.min.js"></script>
+
+<script src="script.js"></script>    
+  <section class="layout">
+    <div class="header debug">
+        <p class="fill">Data Collection!</p>
+    </div>
+    <div class="sideBar center debug">
+        <div>
+            <p>School ID</p>
+            <select id="schoolSelection" onchange="updateContent()">
+                <option value="HHS">HHS</option>
+                <option value="RHS">RHS</option>
+            </select>
+        </div>
+        <div>
+            <p>Item Select</p>
+            <select id="itemSelection" onchange="updateContent()">
+                <option value="All">All</option>
+                <option value="CycleAnalyst">Cycle Analyst</option>
+                <option value="Tempatures">Tempatures</option>
+                <option value="IMU">IMU</option>
+                <option value="Custom">Custom</option>
+            </select>
+        </div>
+        <div id="CycleAnalystSelectionArea" style="display: none;">
+            <div class="left">
+                <b>&nbsp;Cycle Analyst</b><br>
+                <input type="checkbox" id="ca_AmpHrs" name="Amp Hours">
+                <label for="ca_AmpHrs">Amp Hours</label>
+                <br>
+                <input type="checkbox" id="ca_Voltage" name="Voltage">
+                <label for="ca_Voltage">Voltage</label>
+                <br>
+                <input type="checkbox" id="ca_Current" name="Current">
+                <label for="ca_Current">Current</label>
+                <br>
+                <input type="checkbox" id="ca_Speed" name="Speed">
+                <label for="ca_Speed">Speed</label>
+                <br>
+                <input type="checkbox" id="ca_Miles" name="Miles">
+                <label for="ca_Miles">Miles</label>
+            </div>
+        </div>
+        <div id="TempaturesSelectionArea" style="display: none;">
+            <div class="left">
+                <b>&nbsp;Tempatures</b><br>
+                <input type="checkbox" id="motor_temp" name="Motor Temp">
+                <label for="motor_temp">Motor Temp</label>
+                <br>
+                <input type="checkbox" id="Battery_1" name="Battery Temp 1">
+                <label for="Battery_1">Battery Temp 1</label>
+                <br>
+                <input type="checkbox" id="Battery_2" name="Battery Temp 2">
+                <label for="Battery_2">Battery Temp 2</label>
+            </div>
+        </div>
+        <div id="IMUSelectionArea" style="display: none;">
+            <div class="left">
+                <b>&nbsp;IMU</b><br>
+                <input type="checkbox" id="IMU_Accel_x" name="Accelerometer X">
+                <label for="IMU_Accel_x">Accelerometer X</label>
+                <br>
+                <input type="checkbox" id="IMU_Accel_y" name="Accelerometer Y">
+                <label for="IMU_Accel_y">Accelerometer Y</label>
+                <br>
+                <input type="checkbox" id="IMU_Accel_z" name="Accelerometer Z">
+                <label for="IMU_Accel_z">Accelerometer Z</label>
+                <br>
+                <input type="checkbox" id="IMU_Gyro_x" name="Gyroscope X">
+                <label for="IMU_Gyro_x">Gyroscope X</label>
+                <br>
+                <input type="checkbox" id="IMU_Gyro_y" name="Gyroscope Y">
+                <label for="IMU_Gyro_y">Gyroscope Y</label>
+                <br>
+                <input type="checkbox" id="IMU_Gyro_z" name="Gyroscope Z">
+                <label for="IMU_Gyro_z">Gyroscope Z</label>
+            </div>
+        </div>
+        <div id="customSelectionArea" style="display: none;">
+            <div class="left">
+                <b>&nbsp;Extra</b><br>
+                <input type="checkbox" id="Brake_Pedal" name="Brake Pedal">
+                <label for="Brake_Pedal">Brake Pedal</label>
+                <br>
+                <input type="checkbox" id="throttle" name="Throttle">
+                <label for="throttle">Throttle</label>
+                <br>
+                <input type="checkbox" id="counter" name="Counter">
+                <label for="counter">Counter</label>
+                <br>
+                <input type="checkbox" id="time" name="Time">
+                <label for="time">Time</label>
+            </div>
+        </div>
+        <div id="submitSelectionArea" style="display: none;">
+            <button onclick="clearSelectedCheckboxes()" class="red-button button ">Clear</button> &nbsp; &nbsp; <button onclick="getSelectedCheckboxes()" class="button">Apply</button>
+        </div>
+    </div>
+    <div id="p5Canvas" class="body">
+        <script src="./main.js"></script>
+    </div>
+  </section>
+</body>
+<div id="data" style="display: none;"></div>
+</html>

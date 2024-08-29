@@ -1,0 +1,11 @@
+[Unit]
+Description=Main Code to receive the Data
+
+[Service]
+Restart=always
+RestartSec=3
+User=root
+ExecStart=python3 "/path/to/file/main.py"
+
+[Install]
+WantedBy=multi-user.target

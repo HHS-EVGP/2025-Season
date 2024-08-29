@@ -1,0 +1,7 @@
+User:     "data"
+Password: "evgp"
+hostname: "electric.local"
+
+
+Things to setup:
+- lighttpd

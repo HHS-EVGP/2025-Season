@@ -1,0 +1,11 @@
+[Unit]
+Description=Check If the Main Code is running
+
+[Service]
+Restart=always
+RestartSec=3
+User=root
+ExecStart=python3 "/path/to/file/code_checker.py"
+
+[Install]
+WantedBy=multi-user.target

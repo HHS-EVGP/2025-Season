@@ -1,0 +1,17 @@
+Commands to run:
+- chmod +x /path/to/monitor_wifi.sh
+- sudo apt-get install dos2unix
+- dos2unix /path/to/monitor_wifi.sh
+
+
+Things that need to be installed:
+- pip3 install adafruit-circuitpython-ads1x15
+- pip3 install Adafruit-ADS1x15
+- pip3 install adafruit-circuitpython-rfm9x
+- pip3 install adafruit-circuitpython-lsm6ds
+- pip3 install pyserial
+Or just do this:
+- sudo pip3 install adafruit-circuitpython-ads1x15 Adafruit-ADS1x15 adafruit-circuitpython-rfm9x adafruit-circuitpython-lsm6ds pyserial
+
+To see if things are running:
+- sudo systemctl status wifi_monitor.service transmit.service code_check.service buttons.service

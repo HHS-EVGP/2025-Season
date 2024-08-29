@@ -1,0 +1,53 @@
+.debug {
+    /* On */
+    border: 2px dashed red;
+
+    /* Off */
+    /* border: 0px; */
+}
+
+.layout {
+    width: 100%;
+    height: auto;
+  
+    display: grid;
+    grid:
+      "header header" 76px
+      "sideBar body" auto
+      / 155px auto;
+    gap: 8px;
+  }
+  
+.header { grid-area: header; }
+.sideBar { grid-area: sideBar; }
+.body { 
+    grid-area: body; 
+    gap: 0px;
+    margin: 0px;
+}
+
+.fill {
+    min-width: 300px;
+    text-align: center;
+    margin: 15px;   
+    font-size: 38px;
+}
+.center {
+    text-align: center;
+}
+.left {
+    text-align: left;
+}
+
+#CycleAnalystSelectionArea, #TempaturesSelectionArea, #IMUSelectionArea, #customSelectionArea{
+    display: none;
+}
+
+.button {
+    background-color: lightgreen;
+    color: black;
+    cursor: pointer;
+}
+.red-button {
+    background-color: red;
+}

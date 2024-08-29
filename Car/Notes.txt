@@ -1,0 +1,3 @@
+User:     "car"
+Password: "evgp"
+hostname: "electric.local"
