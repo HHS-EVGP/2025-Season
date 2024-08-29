@@ -30,8 +30,8 @@ analogA = ADS.ADS1115(i2c, address = 0x4A)
 analogB = ADS.ADS1115(i2c, address = 0x4B)
 imu = LSM6DSOX(i2c, address = 0x6A)
 #Setup Analog In Ports
-A0 = AnalogIn(analogA, ADS.P0) # motorTemp
-A1 = AnalogIn(analogA, ADS.P1) # throttle
+A0 = AnalogIn(analogA, ADS.P0) # throttle
+A1 = AnalogIn(analogA, ADS.P1) # motorTemp
 A2 = AnalogIn(analogA, ADS.P2) # battTemp1
 A3 = AnalogIn(analogA, ADS.P3) # battTemp2
 B0 = AnalogIn(analogB, ADS.P0) # battTemp3
@@ -53,43 +53,55 @@ logging.basicConfig(filename=new_file_name, filemode='w', format='%(message)s')
 
 def UART():
     # Send output as: "CA,amp_hours,voltage,current,speed,miles|"
-    # data = cycleAnalyst.read(10)
-    # print(bytes)
-    # print(data)
+    data = cycleAnalyst.read(10) # NEEDS WORK TODO
+    print(bytes)
+    print(data)
     return f"CA,None,None,None,None,None|"
 
 def analogPull():
     data = ""
     temp_data = ""
     try:
-        data += f"throttle,{A1.value}|"
+        data += f"throttle,{A0.value}|"
     except:
         data += f"throttle,None|"
 
-    try:
-        data += f"brake,{A2.value}|"
-    except:
-        data += f"brake,None|"
-
     # Motor Temperature
     try:
-        temp_data += f"{A0.value},"
+        temp_data += f"{A1.value},"
     except:
         temp_data += "None,"
 
     # Battery 1 Temperature
     try:
-        temp_data += f"{A3.value},"
+        temp_data += f"{A2.value},"
     except:
         temp_data += "None,"
 
     # Battery 2 Temperature
     try:
-        temp_data += f"{B0.value}"
+        temp_data += f"{A3.value},"
+    except:
+        temp_data += "None,"
+
+    # Battery 3 Temperature
+    try:
+        temp_data += f"{B0.value},"
+    except:
+        temp_data += "None,"
+
+    # Battery 4 Temperature
+    try:
+        temp_data += f"{B1.value}"
     except:
         temp_data += "None"
 
-    data += f"tempatureData,{temp_data}|"
+    data += f"tempData,{temp_data}|"
+
+    try:
+        data += f"brake,{B3.value}|"
+    except:
+        data += f"brake,None|"
 
     return data
 
