@@ -1,33 +1,56 @@
 #!/usr/bin/python
-#
-#   backlight-toggle.py   10-25-2015 
-#     
-#   RPF 7" Touchscreen Display
-#          Toggles backlight on/off with button press 
-#          Uses GPIO5  (BOARD Pin 29)
-
 
 import RPi.GPIO as gpio
 from subprocess import call
 import time
 from start import start_service
+from stop import stop_service
 from restart import restart_now
+from shutdown import shutdown_now
 
+Halt_other = False
+
+# Start Button
 button1_gpio_pin = None # SET THESE
+
+# Restart Button
 button2_gpio_pin = None # SET THESE
+
+# Stop Button 
+#   When Pressed with Start, Stops the code
+#   When Pressed with Restart, PI shutsdown
+button3_gpio_pin = None # SET THESE
 
 gpio.setmode(gpio.BCM)
 gpio.setup(button1_gpio_pin, gpio.IN)
 gpio.setup(button2_gpio_pin, gpio.IN)
+gpio.setup(button3_gpio_pin, gpio.IN)
 
 def start_code(channel):
-    start_service()
+    if not Halt_other:
+        start_service()
 
 def shutdown(channel):
-    restart_now()
+    if not Halt_other:
+        restart_now()
+
+def stop_choice(channel):
+    global Halt_other
+    Halt_other = True
+    if gpio.input(button1_gpio_pin) == gpio.HIGH:
+        # If Stop button is pressed with Start button, stop the code
+        stop_service()
+        time.sleep(1)
+        Halt_other = False
+    elif gpio.input(button2_gpio_pin) == gpio.HIGH:
+        # If Stop button is pressed with Restart button, shutdown the Pi
+        shutdown_now()
+        time.sleep(1)
+        Halt_other = False
     
 gpio.add_event_detect(button1_gpio_pin, gpio.RISING, callback=start_code, bouncetime=300)
 gpio.add_event_detect(button2_gpio_pin, gpio.RISING, callback=shutdown, bouncetime=300)
+gpio.add_event_detect(button3_gpio_pin, gpio.RISING, callback=stop_choice, bouncetime=300)
 
 while 1:
     time.sleep(360)
