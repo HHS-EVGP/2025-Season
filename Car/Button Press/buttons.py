@@ -3,10 +3,10 @@
 import RPi.GPIO as gpio
 from subprocess import call
 import time
-from start import start_service
-from stop import stop_service
-from restart import restart_now
-from shutdown import shutdown_now
+from functions.start import start_service
+from functions.stop import stop_service
+from functions.restart import restart_now
+from functions.shutdown import shutdown_now
 
 Halt_other = False
 
@@ -21,10 +21,15 @@ button2_gpio_pin = None # SET THESE
 #   When Pressed with Restart, PI shutsdown
 button3_gpio_pin = None # SET THESE
 
+# LED for Power
+PowerLED = None # SET THESE
+
+
 gpio.setmode(gpio.BCM)
 gpio.setup(button1_gpio_pin, gpio.IN)
 gpio.setup(button2_gpio_pin, gpio.IN)
 gpio.setup(button3_gpio_pin, gpio.IN)
+gpio.setup(PowerLED, gpio.OUT)
 
 def start_code(channel):
     if not Halt_other:
