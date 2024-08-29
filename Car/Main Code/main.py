@@ -32,12 +32,12 @@ imu = LSM6DSOX(i2c, address = 0x6A)
 #Setup Analog In Ports
 A0 = AnalogIn(analogA, ADS.P0) # motorTemp
 A1 = AnalogIn(analogA, ADS.P1) # throttle
-A2 = AnalogIn(analogA, ADS.P2) # brake
-A3 = AnalogIn(analogA, ADS.P3) # battTemp1
-B0 = AnalogIn(analogB, ADS.P0) # 
-B1 = AnalogIn(analogB, ADS.P1) # 
+A2 = AnalogIn(analogA, ADS.P2) # battTemp1
+A3 = AnalogIn(analogA, ADS.P3) # battTemp2
+B0 = AnalogIn(analogB, ADS.P0) # battTemp3
+B1 = AnalogIn(analogB, ADS.P1) # battTemp4
 B2 = AnalogIn(analogB, ADS.P2) # 
-B3 = AnalogIn(analogB, ADS.P3) # 
+B3 = AnalogIn(analogB, ADS.P3) # brake
 #Setup UART for Cycle Anyalist
 cycleAnalyst = serial.Serial('/dev/serial0',baudrate=9600)
 #Setup variables
@@ -46,9 +46,9 @@ dataR = None
 conter = 0
 #Setup Logging
 index = 1
-while os.path.exists(f"/home/car/{index}.data.log"):
-    index = index + 1
-new_file_name = f"/home/car/{index}.data.log"
+while os.path.exists(f"/home/car/logs/{index:03}.data.log"):
+    index += 1
+new_file_name = f"/home/car/logs/{index:03}.data.log"
 logging.basicConfig(filename=new_file_name, filemode='w', format='%(message)s')
 
 def imuPull():
