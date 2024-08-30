@@ -27,30 +27,22 @@ conter = 0
 new_file_name = f"/home/data/front_end/2.data.csv"
 
 fieldnames = [
-    'school_id','time','counter',
-    'motor_temp','throttle',
-    'Brake_Pedal','Battery_1','Battery_2',
-    'IMU_Accel_x', 'IMU_Accel_y', 'IMU_Accel_z',
-    'IMU_Gyro_x', 'IMU_Gyro_y', 'IMU_Gyro_z',
+    'time','counter',
+    'throttle','Brake_Pedal',
+    'motor_temp','Battery_1','Battery_2','Battery_3','Battery_4',
     'ca_AmpHrs','ca_Voltage','ca_Current','ca_Speed','ca_Miles'
     ]
 
-school_ID = None
-
-accelerometer_x = None
-accelerometer_y = None
-accelerometer_z = None
-gyroscope_x = None
-gyroscope_y = None
-gyroscope_z = None
+school_id = 'hhs'
 
 throttle = None
+brake_pedal = None
 
 motor_temp = None
 Battery_temp_1 = None
 Battery_temp_2 = None
-
-brake_pedal = None
+Battery_temp_3 = None
+Battery_temp_4 = None
 
 amp_hours = None
 voltage = None
@@ -81,6 +73,9 @@ while True:
 
         # check for packet rx
         packet = rfm9x.receive()
+
+        # Packet should look like this: 
+        # hhs|throttle,None|brake,None|tempData,None,None,None,None,None|CA,None,None,None,None,None|
         
         if packet is None:
             print('- Waiting for PKT -')
@@ -89,55 +84,43 @@ while True:
             print(packet)
             try:
                 current_packet = str(packet, "utf-8")
-                # print(current_packet)
-
-                pass
 
                 try:
                     all_data = current_packet.split('|')
                     
-                    school_ID, IN_throttle, IN_brake, IN_tempatureData, IN_imu, IN_cycle_analyst, IN_extra_NULL = map(str, all_data)
+                    school_ID, IN_throttle, IN_brake, IN_tempatureData, IN_cycle_analyst, IN_extra_NULL = map(str, all_data)
                     
-                    print(school_ID)
-                    
-                    if IN_imu.startswith("imu,"):
-                        values = IN_imu.split(',')
-                        accelerometer_x, accelerometer_y, accelerometer_z, gyroscope_x, gyroscope_y, gyroscope_z = map(float, values[1:])
-                        if accelerometer_x == "None":
-                            accelerometer_x = ""
-                            accelerometer_y = ""
-                            accelerometer_z = ""
-                            gyroscope_x = ""
-                            gyroscope_y = ""
-                            gyroscope_z = ""
+                    if school_ID == school_id:
 
-                    if IN_tempatureData.startswith("tempatureData,"):
-                        values = IN_tempatureData.split(',')
-                        motor_temp, Battery_temp_1, Battery_temp_2 = map(float, values[1:])
+                        if IN_throttle.startswith("throttle,"):
+                            values = IN_throttle.split(',')
+                            throttle = values[1:][0]
+                            if throttle == "None":
+                                throttle = ""
 
-                        if motor_temp == "None":
-                            motor_temp = ""
-                        if Battery_temp_1 == "None":
-                            Battery_temp_1 = ""
-                        if Battery_temp_2 == "None":
-                            Battery_temp_2 = ""
+                        if IN_brake.startswith("brake,"):
+                            values = IN_brake.split(',')
+                            brake_pedal = values[1:][0]
+                            if brake_pedal == "None":
+                                brake_pedal = ""
 
-                    if IN_brake.startswith("brake,"):
-                        values = IN_brake.split(',')
-                        brake_pedal = values[1:][0] # The [0] MAY cause issues... I do not know yet.
-                        if brake_pedal == "None":
-                            brake_pedal = ""
+                        if IN_tempatureData.startswith("tempData,"):
+                            values = IN_tempatureData.split(',')
+                            motor_temp, Battery_temp_1, Battery_temp_2, Battery_temp_3, Battery_temp_4 = values[1:]
+                            if motor_temp == "None":
+                                motor_temp = ""
+                            if Battery_temp_1 == "None":
+                                Battery_temp_1 = ""
+                            if Battery_temp_2 == "None":
+                                Battery_temp_2 = ""
+                            if Battery_temp_3 == "None":
+                                Battery_temp_3 = ""
+                            if Battery_temp_4 == "None":
+                                Battery_temp_4 = ""
 
-                    if IN_throttle.startswith("throttle,"):
-                        values = IN_throttle.split(',')
-                        throttle = values[1:][0] # The [0] MAY cause issues... I do not know yet.
-                        if throttle == "None":
-                            throttle = ""
-
-                    if IN_cycle_analyst.startswith("CA,"):
-                        values = IN_cycle_analyst.split(',')
-                        try:
-                            amp_hours, voltage, current, speed, miles, Other, Other = values[1:]
+                        if IN_cycle_analyst.startswith("CA,"):
+                            values = IN_cycle_analyst.split(',')
+                            amp_hours, voltage, current, speed, miles = values[1:]
                             if amp_hours == "None":
                                 amp_hours = ""
                             if voltage == "None":
@@ -148,20 +131,18 @@ while True:
                                 speed = ""
                             if miles == "None":
                                 miles = ""
-                        except:
-                            pass
 
                 except Exception as err:
                     printError(err)
                 
                 try:
                     writer.writerow({
-                        'school_id':school_ID,'time':datetime.now(),'counter':conter,
-                        'IMU_Accel_x':accelerometer_x, 'IMU_Accel_y':accelerometer_y, 'IMU_Accel_z':accelerometer_z,
-                        'IMU_Gyro_x':gyroscope_x, 'IMU_Gyro_y':gyroscope_y, 'IMU_Gyro_z':gyroscope_z,
-                        'Battery_1':Battery_temp_1,'Battery_2':Battery_temp_2,'Brake_Pedal':brake_pedal,
-                        'ca_AmpHrs':amp_hours,'ca_Voltage':voltage,'ca_Current':current,'ca_Speed':speed,'ca_Miles':miles,
-                        'motor_temp':motor_temp,'throttle':throttle
+                        'time':datetime.now(),'counter':conter,
+                        'throttle':throttle,'Brake_Pedal':brake_pedal,
+                        'motor_temp':motor_temp,'Battery_1':Battery_temp_1,
+                        'Battery_2':Battery_temp_2,'Battery_3':Battery_temp_3,
+                        'Battery_4':Battery_temp_4,'ca_AmpHrs':amp_hours,'ca_Voltage':voltage,
+                        'ca_Current':current,'ca_Speed':speed,'ca_Miles':miles
                         })
                 except Exception as err:
                     printError(err)

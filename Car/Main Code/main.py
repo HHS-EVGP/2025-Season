@@ -66,6 +66,11 @@ def analogPull():
     except:
         data += f"throttle,None|"
 
+    try:
+        data += f"brake,{B3.value}|"
+    except:
+        data += f"brake,None|"
+
     # Motor Temperature
     try:
         temp_data += f"{A1.value},"
@@ -97,11 +102,6 @@ def analogPull():
         temp_data += "None"
 
     data += f"tempData,{temp_data}|"
-
-    try:
-        data += f"brake,{B3.value}|"
-    except:
-        data += f"brake,None|"
 
     return data
 
