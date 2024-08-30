@@ -42,20 +42,25 @@ async function fetchAndProcessCSV() {
 updateContent();
 var realWindowsWidth, realWindowsHeight;
 
-objects[0]  = new plain_text      (650,185, 'Time',            0.9                               );
-objects[1]  = new plain_text      (650,240, 'Counter',         0.9                               );
-objects[2]  = new throttle        (775, 80, 'Throttle',        1.0                               );
-objects[3]  = new brake           (775,170, 'Brake Pedal',     1.0                               );
-objects[4]  = new odometer        (60,240, 'Motor Temp',      0.55, "°F",      150,        32,  4);
-objects[5]  = new odometer        (180,240, 'Temp 1',          0.55, "°F",      120,        32,  4);
-objects[6]  = new odometer        (300,240, 'Temp 2',          0.55, "°F",      120,        32,  4);
-objects[7]  = new odometer        (420,240, 'Temp 3',          0.55, "°F",      120,        32,  4);
-objects[8]  = new odometer        (540,240, 'Temp 4',          0.55, "°F",      120,        32,  4);
-objects[9]  = new odometer_counter(600,140, 'Amp Hours',       0.7                               );
-objects[10] = new odometer        (225,100, 'Voltage',         0.7, 'V',       53,         43,  0);
-objects[11] = new odometer        (375,100, 'Current',         0.7, 'amps',    150,       -20,  6);
-objects[12] = new odometer        ( 75,100, 'Speed',           0.7, 'mph',     50,         0     );
-objects[13] = new odometer_counter(600, 50, 'Miles',           0.7                               );
+objects[0]  = new plain_text      (650,185, 'Time',            0.9                              );
+objects[1]  = new plain_text      (650,240, 'Counter',         0.9                              );
+objects[2]  = new throttle        (775, 80, 'Throttle',        1.0                              );
+objects[3]  = new brake           (775,170, 'Brake Pedal',     1.0                              );
+objects[4]  = new odometer        ( 60,240, 'Motor Temp',      0.55, "°F",     150,        32, 4);
+objects[5]  = new odometer        (180,240, 'Temp 1',          0.55, "°F",     120,        32, 4);
+objects[6]  = new odometer        (300,240, 'Temp 2',          0.55, "°F",     120,        32, 4);
+objects[7]  = new odometer        (420,240, 'Temp 3',          0.55, "°F",     120,        32, 4);
+objects[8]  = new odometer        (540,240, 'Temp 4',          0.55, "°F",     120,        32, 4);
+objects[9]  = new odometer_counter(600,140, 'Amp Hours',       0.7                              );
+objects[10] = new odometer        (225,100, 'Voltage',         0.7, 'V',       53,         43, 0);
+objects[11] = new odometer        (375,100, 'Current',         0.7, 'amps',    150,       -20, 6);
+objects[12] = new odometer        ( 75,100, 'Speed',           0.7, 'mph',     50,         0    );
+objects[13] = new odometer_counter(600, 50, 'Miles',           0.7                              );
+objects[14] = new graph           (105,300, 'Speed',           1.0, "Counter", "Speed","mph"    );
+objects[15] = new graph           (315,300, 'Voltage',         1.0, "Counter", "Voltage","V"    );
+objects[16] = new graph           (525,300, 'Current',         1.0, "Counter", "Current","amps" );
+objects[17] = new graph           (735,300, 'Throttle',        1.0, "Counter", "Throttle","%"   );
+objects[18] = new graph           (945,300, 'Brake',           1.0, "Counter", "Brake","%"      );
 
 function setup() {
     realWindowsWidth = windowWidth - 184;
