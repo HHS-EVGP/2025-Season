@@ -5,3 +5,5 @@ hostname: "electric.local"
 
 Things to setup:
 - lighttpd
+
+You need node.js setup and installed. Version LTS 20.17.0
