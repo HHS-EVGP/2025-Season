@@ -77,6 +77,37 @@ function objectSetup(){
 
 
 async function draw() {
-    objects[14].draw([0,1,2,3,4,5,6,7,8,9],[22,22,23,24,25,28,30,27,20,8])
+    fetchAndProcessCSV();
+    
+    // If the new data failed, try again
+    if (lastTenEntries == null){
+        return;
+    }
+
+    // loop through each object
+    for (let i = 0; i < objects.length; i++) {
+        // Is this object set to be on the screen
+        // If not, hide
+        if(items.includes(Allitems[i])){
+            //If the object was hidden, set back up
+            if(hidden[i]){ 
+                hidden[i] = false;
+                objects[i].setup();
+            }
+            //Update the object(s)
+
+            if(i >= 0 && i <= 13){
+                console.log(lastTenEntries)
+            }
+
+        }else{
+            if(!hidden[i]){
+                objects[i].hide();
+                hidden[i] = true;
+            }
+        }
+    }
+    
+
 }
 

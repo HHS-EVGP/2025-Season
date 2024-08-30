@@ -1,7 +1,7 @@
 window.onload = function() {
     document.getElementById('itemSelection').addEventListener('change', function() {
         // Hide all selection areas first
-        document.getElementById('customSelectionArea').style.display = 'none';
+        document.getElementByIWd('customSelectionArea').style.display = 'none';
         // Show or Hide the selected areas
         const selectedValue = this.value;
         if (selectedValue === 'All') {

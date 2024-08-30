@@ -1,6 +1,6 @@
 $.ajax({
   type: "GET",
-  url: "/2.data.csv",
+  url: "/001.data.csv",
   dataType: "text",
 //  success: function(data) {
 //    var lastTenEntries = getLastTenEntriesFromCSV(data);
