@@ -453,6 +453,8 @@ class throttle {
         translate(-this.x,-this.y+this.size*(1/16));
 
         drawingContext.fillStyle = "white";
+
+        this.draw(1);
     }
     draw(value){
         this.hide();
@@ -498,6 +500,7 @@ class throttle {
         line(this.x,this.y,this.x+this.size,this.y-this.size*(3/8));
         line(this.x+this.size,this.y-this.size*(3/8),this.x+this.size,this.y);
 
+        stroke("white");
         translate(this.x,this.y-this.size*(1/16));
         rotate(-0.35877);
         textSize(this.size/10)
@@ -529,7 +532,7 @@ class brake {
     }
     setup(){
         /* 
-        Gradient Code comes from: 
+        Gradient Codecccccc comes from: 
         Jeff Thompson | 2021 | jeffreythompson.org
         https://editor.p5js.org/jeffThompson/sketches/ta7msUszJ
         */
@@ -560,6 +563,8 @@ class brake {
         translate(-this.x,-this.y+this.size*(1/16));
 
         drawingContext.fillStyle = "white";
+
+        this.draw(1);
     }
     draw(value){
         this.hide();
@@ -589,7 +594,6 @@ class brake {
 
         drawingContext.fillStyle = "white";
 
-
         fill("white");
         stroke("white");
         strokeWeight(1);
@@ -607,6 +611,7 @@ class brake {
         line(this.x,this.y,this.x+this.size,this.y-this.size*(3/8));
         line(this.x+this.size,this.y-this.size*(3/8),this.x+this.size,this.y);
 
+        stroke("white");
         translate(this.x,this.y-this.size*(1/16));
         rotate(-0.35877);
         textSize(this.size/10)

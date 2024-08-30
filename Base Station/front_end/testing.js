@@ -5,7 +5,7 @@ let Allitems = [
     'ca_AmpHrs', 'ca_Voltage', 'ca_Current', 'ca_Speed', 'ca_Miles'
     ];
 var hidden = [false,false,false,false,false,false,false,false,false,false,false,false,false,false];
-var objects = [];
+const objects = [];
 var lastTenEntries;
 
 function updateContent() {
@@ -58,25 +58,26 @@ function setup() {
     canvas.parent('p5Canvas');
     textAlign(CENTER,CENTER);
     frameRate(20);
-    for (let i = 0; i < objects.length; i++) {
-        objects[i].setup();
-    }
+    objectSetup();
 }
 function map(value, minInput, maxInput, minOutput, maxOutput) {
     return (value - minInput) * (maxOutput - minOutput) / (maxInput - minInput) + minOutput;
+}
+
+function objectSetup(){
+    for (let i = 0; i < objects.length; i++) {
+        objects[i].setup();
+    }
 }
 
 function windowResized() {  
     realWindowsWidth = windowWidth - 184;
     realWindowsHeight = windowHeight - 104;
     resizeCanvas(windowWidth-184, windowHeight-104);
-    for (let i = 0; i < objects.length; i++) {
-        objects[i].setup();
-    }
+    objectSetup();
 }
 async function draw() {
 
-    objects[3].draw(0.9);
     
 }
 
