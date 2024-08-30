@@ -20,11 +20,11 @@ rfm9x = adafruit_rfm9x.RFM9x(busio.SPI(board.SCK, MOSI=board.MOSI, MISO=board.MI
 rfm9x.tx_power = 23
 
 index = 1
-conter = 0
+counter_var = 0
 
-# while os.path.exists(f"/home/data/front_end/{index}.data.csv"):
-#     index += 1
-new_file_name = f"/home/data/front_end/2.data.csv"
+while os.path.exists(f"/home/data/front_end/{index:03}.data.log"):
+    index += 1
+new_file_name = f"/home/data/front_end/{index:03}.data.log"
 
 fieldnames = [
     'time','counter',
@@ -61,14 +61,14 @@ def printError(erorr):
     
 while True:
     time.sleep(0.15)
-    with open(new_file_name, 'a', newline='') as csv_file: 
+    with open(new_file_name, 'x', newline='') as csv_file: 
         
         writer = csv.DictWriter(csv_file, fieldnames=fieldnames)
 
-        if conter == 0:
+        if counter_var == 0:
             writer.writeheader()
     
-        conter += 1
+        counter_var += 1
         packet = None
 
         # check for packet rx
@@ -79,7 +79,7 @@ while True:
         
         if packet is None:
             print('- Waiting for PKT -')
-            writer.writerow({'time':datetime.now(),'counter':conter})
+            writer.writerow({'time':datetime.now(),'counter':counter_var})
         else:
             print(packet)
             try:
@@ -137,7 +137,7 @@ while True:
                 
                 try:
                     writer.writerow({
-                        'time':datetime.now(),'counter':conter,
+                        'time':datetime.now(),'counter':counter_var,
                         'throttle':throttle,'Brake_Pedal':brake_pedal,
                         'motor_temp':motor_temp,'Battery_1':Battery_temp_1,
                         'Battery_2':Battery_temp_2,'Battery_3':Battery_temp_3,
