@@ -10,9 +10,8 @@ All of the CAR code
 Cleanup the Base-Station code
 
 
-What wer are collecting:
-- 'time'
-- 'counter'
+What we are Sending:
+- 'school_id'
 - 'throttle'
 - 'Brake_Pedal'
 - 'motor_temp'
