@@ -50,12 +50,12 @@ objects[4]  = new odometer_counter(600, 50, 'Miles',           0.7              
 objects[5]  = new odometer        (206,375, 'Motor Temp',      0.7, "°F",      150,        32,  4);
 objects[6]  = new odometer        ( 75,300, 'Temp 1',          0.7, "°F",      120,        32,  4);
 objects[7]  = new odometer        ( 75,450, 'Temp 2',          0.7, "°F",      120,        32,  4);
-objects[8]  = new graph           (400,200, 'Acceleration. X', 0.9, "Counter", "m per s^2"       );
-objects[9]  = new graph           (589,200, 'Acceleration. Y', 0.9, "Counter", "m per s^2"       );
-objects[10] = new graph           (778,200, 'Acceleration. Z', 0.9, "Counter", "m per s^2"       );
-objects[11] = new graph           (400,344, 'Gyroscopic. X',   0.9, "Counter", "Value?"          );
-objects[12] = new graph           (589,344, 'Gyroscopic. Y',   0.9, "Counter", "Value?"          );
-objects[13] = new graph           (778,344, 'Gyroscopic. Z',   0.9, "Counter", "Value?"          );
+// objects[8]  = new graph           (400,200, 'Acceleration. X', 0.9, "Counter", "m per s^2"       );
+// objects[9]  = new graph           (589,200, 'Acceleration. Y', 0.9, "Counter", "m per s^2"       );
+// objects[10] = new graph           (778,200, 'Acceleration. Z', 0.9, "Counter", "m per s^2"       );
+// objects[11] = new graph           (400,344, 'Gyroscopic. X',   0.9, "Counter", "Value?"          );
+// objects[12] = new graph           (589,344, 'Gyroscopic. Y',   0.9, "Counter", "Value?"          );
+// objects[13] = new graph           (778,344, 'Gyroscopic. Z',   0.9, "Counter", "Value?"          );
 objects[14] = new brake           (775,180, 'Brake Pedal',     1.0                               );
 objects[15] = new throttle        (775, 80, 'Throttle',        1.0                               );
 objects[16] = new plain_text      (250,490, 'Counter',         1.0                               );
@@ -105,16 +105,16 @@ async function draw() {
                         objects[i].draw(lastTenEntries[9][map_to[i]]);
                     }
                 }else if(i >= 8 && i <= 13){
-                    var x = [], y = [];
-                    for(let o = 0; o < 10; o++){
-                        if(lastTenEntries[o][i] != ""){
-                            y.push(parseInt(lastTenEntries[o][map_to[i]]));
-                        }else{
-                            y.push(null);
-                        }
-                        x.push(parseInt(lastTenEntries[o][2]));
-                    }
-                    objects[i].draw(x,y);
+                    // var x = [], y = [];
+                    // for(let o = 0; o < 10; o++){
+                    //     if(lastTenEntries[o][i] != ""){
+                    //         y.push(parseInt(lastTenEntries[o][map_to[i]]));
+                    //     }else{
+                    //         y.push(null);
+                    //     }
+                    //     x.push(parseInt(lastTenEntries[o][2]));
+                    // }
+                    // objects[i].draw(x,y);
                 }else if(i == 14 || i == 15){
                     if(lastTenEntries[9][map_to[i]] != ""){
                         let min_input = 0
