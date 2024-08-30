@@ -42,15 +42,15 @@ async function fetchAndProcessCSV() {
 updateContent();
 var realWindowsWidth, realWindowsHeight;
 
-objects[0]  = new plain_text      (600,490, 'Time',            1.0                               );
-objects[1]  = new plain_text      (250,490, 'Counter',         1.0                               );
+objects[0]  = new plain_text      (650,185, 'Time',            0.9                               );
+objects[1]  = new plain_text      (650,240, 'Counter',         0.9                               );
 objects[2]  = new throttle        (775, 80, 'Throttle',        1.0                               );
-objects[3]  = new brake           (775,180, 'Brake Pedal',     1.0                               );
-objects[4]  = new odometer        (206,375, 'Motor Temp',      0.7, "°F",      150,        32,  4);
-objects[5]  = new odometer        ( 75,300, 'Temp 1',          0.7, "°F",      120,        32,  4);
-objects[6]  = new odometer        ( 75,450, 'Temp 2',          0.7, "°F",      120,        32,  4);
-objects[7]  = new odometer        (225,300, 'Temp 3',          0.7, "°F",      120,        32,  4);
-objects[8]  = new odometer        (225,450, 'Temp 4',          0.7, "°F",      120,        32,  4);
+objects[3]  = new brake           (775,170, 'Brake Pedal',     1.0                               );
+objects[4]  = new odometer        (60,240, 'Motor Temp',      0.55, "°F",      150,        32,  4);
+objects[5]  = new odometer        (180,240, 'Temp 1',          0.55, "°F",      120,        32,  4);
+objects[6]  = new odometer        (300,240, 'Temp 2',          0.55, "°F",      120,        32,  4);
+objects[7]  = new odometer        (420,240, 'Temp 3',          0.55, "°F",      120,        32,  4);
+objects[8]  = new odometer        (540,240, 'Temp 4',          0.55, "°F",      120,        32,  4);
 objects[9]  = new odometer_counter(600,140, 'Amp Hours',       0.7                               );
 objects[10] = new odometer        (225,100, 'Voltage',         0.7, 'V',       53,         43,  0);
 objects[11] = new odometer        (375,100, 'Current',         0.7, 'amps',    150,       -20,  6);
@@ -72,14 +72,6 @@ function map(value, minInput, maxInput, minOutput, maxOutput) {
     return (value - minInput) * (maxOutput - minOutput) / (maxInput - minInput) + minOutput;
 }
 
-function windowResized() {  
-    realWindowsWidth = windowWidth - 184;
-    realWindowsHeight = windowHeight - 104;
-    resizeCanvas(windowWidth-184, windowHeight-104);
-    for (let i = 0; i < objects.length; i++) {
-        objects[i].setup();
-    }
-}
 async function draw() {
 
     // console.log(lastTenEntries);
