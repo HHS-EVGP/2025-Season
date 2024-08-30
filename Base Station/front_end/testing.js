@@ -1,17 +1,11 @@
 let items = [];
-let Allitems = ['ca_AmpHrs', 'ca_Voltage', 'ca_Current', 'ca_Speed', 'ca_Miles',
- 'motor_temp', 'Battery_1', 'Battery_2',
-  'IMU_Accel_x', 'IMU_Accel_y', 'IMU_Accel_z', 'IMU_Gyro_x', 'IMU_Gyro_y','IMU_Gyro_z',
-  'Brake_Pedal', 'throttle', 'counter', 'time'];
-var hidden = [false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false];
+let Allitems = [
+    'time', 'counter', 'throttle', 'Brake_Pedal',
+    'motor_temp', 'Battery_1', 'Battery_2', 'Battery_3', 'Battery_4',
+    'ca_AmpHrs', 'ca_Voltage', 'ca_Current', 'ca_Speed', 'ca_Miles'
+    ];
+var hidden = [false,false,false,false,false,false,false,false,false,false,false,false,false,false];
 var objects = [];
-var map_to = [
-    14,15,16,17,18,
-    3,4,5,
-    8,9,10,11,12,13,
-    6,7,
-    2,1
-]
 var lastTenEntries;
 
 function updateContent() {
@@ -25,7 +19,7 @@ function updateContent() {
 
 
 async function fetchAndProcessCSV() {
-    fetch('/2.data.csv')
+    fetch('/001.data.csv') // TODO: Make this select from 001, 002, 003, and so on
         .then(response => response.text())
         .then(text => {
             const lines = text.trim().split('\n');
@@ -42,18 +36,20 @@ async function fetchAndProcessCSV() {
 updateContent();
 var realWindowsWidth, realWindowsHeight;
 
-objects[0]  = new odometer_counter(600,140, 'Amp Hours',       0.7                               );
-// objects[1]  = new odometer        (225,100, 'Voltage',         0.7, 'V',       53,         43,  0);
-// objects[2]  = new odometer        (375,100, 'Current',         0.7, 'amps',    150,       -20,  6);
-// objects[3]  = new odometer        ( 75,100, 'Speed',           0.7, 'mph',     50,         0     );
-// objects[4]  = new odometer_counter(600, 50, 'Miles',           0.7                               );
-// objects[5]  = new odometer        (206,375, 'Motor Temp',      0.7, "°F",      150,        32,  4);
-// objects[6]  = new odometer        ( 75,300, 'Temp 1',          0.7, "°F",      120,        32,  4);
-// objects[7]  = new odometer        ( 75,450, 'Temp 2',          0.7, "°F",      120,        32,  4);
-// objects[14] = new brake           (775,180, 'Brake Pedal',     1.0                               );
-// objects[15] = new throttle        (775, 80, 'Throttle',        1.0                               );
-// objects[16] = new plain_text      (250,490, 'Counter',         1.0                               );
-// objects[17] = new plain_text      (600,490, 'Time',            1.0                               );
+objects[0]  = new plain_text      (600,490, 'Time',            1.0                               );
+objects[1]  = new plain_text      (250,490, 'Counter',         1.0                               );
+objects[2]  = new throttle        (775, 80, 'Throttle',        1.0                               );
+objects[3]  = new brake           (775,180, 'Brake Pedal',     1.0                               );
+objects[4]  = new odometer        (675,300, 'Motor Temp',      0.7, "°F",      150,        32,  4);
+objects[5]  = new odometer        ( 75,300, 'Temp 1',          0.7, "°F",      120,        32,  4);
+objects[6]  = new odometer        (225,300, 'Temp 2',          0.7, "°F",      120,        32,  4);
+objects[7]  = new odometer        (375,300, 'Temp 3',          0.7, "°F",      120,        32,  4);
+objects[8]  = new odometer        (525,300, 'Temp 4',          0.7, "°F",      120,        32,  4);
+objects[9]  = new odometer_counter(600,140, 'Amp Hours',       0.7                               );
+objects[10] = new odometer        (225,100, 'Voltage',         0.7, 'V',       53,         43,  0);
+objects[11] = new odometer        (375,100, 'Current',         0.7, 'amps',    150,       -20,  6);
+objects[12] = new odometer        ( 75,100, 'Speed',           0.7, 'mph',     50,         0     );
+objects[13] = new odometer_counter(600, 50, 'Miles',           0.7                               );
 
 function setup() {
     realWindowsWidth = windowWidth - 184;
@@ -80,7 +76,7 @@ function windowResized() {
 }
 async function draw() {
 
-    objects[0].draw(lastTenEntries[9][map_to[i]]);
+    objects[3].draw(0.9);
     
 }
 
