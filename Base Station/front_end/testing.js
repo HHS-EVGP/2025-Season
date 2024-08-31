@@ -34,6 +34,18 @@ async function fetchAndProcessCSV() {
             // console.log("lastEntrie",lastTenEntries[9]);
         })
         .catch(error => console.error('Error fetching CSV:', error));
+    lastTenEntries = [
+        ["2024-04-10 12:22:51.145637",896,0.2,0.0,102,89,87,90,89.2,20,47,15,20,35],
+        ["2024-04-10 12:22:51.666485",897,0.2,0.0,102,89,87,90,89.2,20,47,15,20,35],
+        ["2024-04-10 12:22:52.186823",898,0.2,0.0,102,89,87,90,89.2,20,47,15,20,35],
+        ["2024-04-10 12:22:52.706740",899,0.2,0.0,102,89,87,90,89.2,20,47,15,20,35],
+        ["2024-04-10 12:22:53.226607",900,0.2,0.0,102,89,87,90,89.2,20,47,15,20,35],
+        ["2024-04-10 12:22:53.743700",901,0.2,0.0,102,89,87,90,89.2,20,47,15,20,35],
+        ["2024-04-10 12:22:54.265764",902,0.2,0.0,102,89,87,90,89.2,20,47,15,22,35],
+        ["2024-04-10 12:22:54.785977",903,0.2,0.0,102,89,87,90,89.2,20,47,15,24,35],
+        ["2024-04-10 12:22:55.301046",904,0.2,0.0,102,89,87,90,89.2,20,47,15,24.3,35],
+        ["2024-04-10 12:22:55.301046",905,0.5,0.1,103,90,91,92,93,21,48,17,30,36.3]
+    ]
 }
 
 updateContent();
@@ -66,18 +78,10 @@ function setup() {
     canvas.parent('p5Canvas');
     textAlign(CENTER,CENTER);
     frameRate(20);
-    objectSetup();
-}
-function map(value, minInput, maxInput, minOutput, maxOutput) {
-    return (value - minInput) * (maxOutput - minOutput) / (maxInput - minInput) + minOutput;
-}
-
-function objectSetup(){
     for (let i = 0; i < objects.length; i++) {
         objects[i].setup();
     }
 }
-
 
 async function draw() {
     fetchAndProcessCSV();
@@ -97,7 +101,7 @@ async function draw() {
                 hidden[i] = false;
                 objects[i].setup();
             }
-            
+
             //Update the object(s)
             if(i >= 0 && i <= 13){
                 objects[i].draw(lastTenEntries[9][i]);

@@ -1,17 +1,14 @@
 let items = [];
-let Allitems = ['ca_AmpHrs', 'ca_Voltage', 'ca_Current', 'ca_Speed', 'ca_Miles',
- 'motor_temp', 'Battery_1', 'Battery_2',
-  'IMU_Accel_x', 'IMU_Accel_y', 'IMU_Accel_z', 'IMU_Gyro_x', 'IMU_Gyro_y','IMU_Gyro_z',
-  'Brake_Pedal', 'throttle', 'counter', 'time'];
-var hidden = [false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false];
-var objects = [];
-var map_to = [
-    14,15,16,17,18,
-    3,4,5,
-    8,9,10,11,12,13,
-    6,7,
-    2,1
-]
+let Allitems = [
+    'time', 'counter', 'throttle', 'Brake_Pedal',
+    'motor_temp', 'Battery_1', 'Battery_2', 'Battery_3', 'Battery_4',
+    'ca_AmpHrs', 'ca_Voltage', 'ca_Current', 'ca_Speed', 'ca_Miles',
+    'ca_Voltage_graph', 'ca_Current_graph', 'ca_Speed_graph',
+    'throttle_graph', 'Brake_Pedal_graph'
+
+    ];
+var hidden = [false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false];
+const objects = [];
 var lastTenEntries;
 
 function updateContent() {
@@ -25,7 +22,7 @@ function updateContent() {
 
 
 async function fetchAndProcessCSV() {
-    fetch('/2.data.csv')
+    fetch('/001.data.csv') // TODO: Make this select from 001, 002, 003, and so on
         .then(response => response.text())
         .then(text => {
             const lines = text.trim().split('\n');
@@ -37,6 +34,18 @@ async function fetchAndProcessCSV() {
             // console.log("lastEntrie",lastTenEntries[9]);
         })
         .catch(error => console.error('Error fetching CSV:', error));
+    lastTenEntries = [
+        ["2024-04-10 12:22:51.145637",896,0.2,0.0,102,89,87,90,89.2,20,47,15,20,35],
+        ["2024-04-10 12:22:51.666485",897,0.2,0.0,102,89,87,90,89.2,20,47,15,20,35],
+        ["2024-04-10 12:22:52.186823",898,0.2,0.0,102,89,87,90,89.2,20,47,15,20,35],
+        ["2024-04-10 12:22:52.706740",899,0.2,0.0,102,89,87,90,89.2,20,47,15,20,35],
+        ["2024-04-10 12:22:53.226607",900,0.2,0.0,102,89,87,90,89.2,20,47,15,20,35],
+        ["2024-04-10 12:22:53.743700",901,0.2,0.0,102,89,87,90,89.2,20,47,15,20,35],
+        ["2024-04-10 12:22:54.265764",902,0.2,0.0,102,89,87,90,89.2,20,47,15,22,35],
+        ["2024-04-10 12:22:54.785977",903,0.2,0.0,102,89,87,90,89.2,20,47,15,24,35],
+        ["2024-04-10 12:22:55.301046",904,0.2,0.0,102,89,87,90,89.2,20,47,15,24.3,35],
+        ["2024-04-10 12:22:55.301046",905,0.5,0.1,103,90,91,92,93,21,48,17,30,36.3]
+    ]
 }
 
 updateContent();
@@ -56,9 +65,9 @@ objects[10] = new odometer        (225,100, 'Voltage',         0.7, 'V',       5
 objects[11] = new odometer        (375,100, 'Current',         0.7, 'amps',    150,       -20, 6);
 objects[12] = new odometer        ( 75,100, 'Speed',           0.7, 'mph',     50,         0    );
 objects[13] = new odometer_counter(600, 50, 'Miles',           0.7                              );
-objects[14] = new graph           (105,300, 'Speed',           1.0, "Counter", "Speed","mph"    );
-objects[15] = new graph           (315,300, 'Voltage',         1.0, "Counter", "Voltage","V"    );
-objects[16] = new graph           (525,300, 'Current',         1.0, "Counter", "Current","amps" );
+objects[14] = new graph           (315,300, 'Voltage',         1.0, "Counter", "Voltage","V"    );
+objects[15] = new graph           (525,300, 'Current',         1.0, "Counter", "Current","amps" );
+objects[16] = new graph           (105,300, 'Speed',           1.0, "Counter", "Speed","mph"    );
 objects[17] = new graph           (735,300, 'Throttle',        1.0, "Counter", "Throttle","%"   );
 objects[18] = new graph           (945,300, 'Brake',           1.0, "Counter", "Brake","%"      );
 
@@ -73,67 +82,47 @@ function setup() {
         objects[i].setup();
     }
 }
-function map(value, minInput, maxInput, minOutput, maxOutput) {
-    return (value - minInput) * (maxOutput - minOutput) / (maxInput - minInput) + minOutput;
-}
 
 async function draw() {
-
-    // console.log(lastTenEntries);
-
     fetchAndProcessCSV();
-
-
-    if (lastTenEntries != null){
-        for (let i = 0; i < objects.length; i++) {
-            if(items.includes(Allitems[i])){
-                if(hidden[i]){
-                    hidden[i] = false;
-                    objects[i].setup();
-                }
-                //Update the object if it is live HERE
-
-                if(i >= 0 && i <= 7){
-                    if(lastTenEntries[9][map_to[i]] != ""){
-                        objects[i].draw(lastTenEntries[9][map_to[i]]);
-                    }
-                }else if(i >= 8 && i <= 13){
-                    // var x = [], y = [];
-                    // for(let o = 0; o < 10; o++){
-                    //     if(lastTenEntries[o][i] != ""){
-                    //         y.push(parseInt(lastTenEntries[o][map_to[i]]));
-                    //     }else{
-                    //         y.push(null);
-                    //     }
-                    //     x.push(parseInt(lastTenEntries[o][2]));
-                    // }
-                    // objects[i].draw(x,y);
-                }else if(i == 14 || i == 15){
-                    if(lastTenEntries[9][map_to[i]] != ""){
-                        let min_input = 0
-                        let max_input = 10000
-
-                        let input = map(lastTenEntries[9][map_to[i]],min_input,max_input,0,1);
-                        if(input > 1){
-                            input = 1;
-                        }else if(input < 0){
-                            input = 0;
-                        }
-                        objects[i].draw(input);
-                    }else{
-                        objects[i].draw(0);
-                    }
-                }else if(i == 16 || i == 17){
-                    objects[i].draw(lastTenEntries[9][map_to[i]]);
-                }
     
-            }else{
-                if(!hidden[i]){
-                    objects[i].hide();
-                    hidden[i] = true;
-                }
+    // If the new data failed, try again
+    if (lastTenEntries == null){
+        return;
+    }
+
+    // loop through each object
+    for (let i = 0; i < objects.length; i++) {
+        // Is this object set to be on the screen
+        // If not, hide
+        if(items.includes(Allitems[i])){
+            //If the object was hidden, set back up
+            if(hidden[i]){ 
+                hidden[i] = false;
+                objects[i].setup();
+            }
+
+            //Update the object(s)
+            if(i >= 0 && i <= 13){
+                objects[i].draw(lastTenEntries[9][i]);
+            }else if(i >= 14 && i <= 16){
+                const CountColumnValues = lastTenEntries.map(row => row[1]);
+                const ColumnValues = lastTenEntries.map(row => row[i-4]);
+                objects[i].draw(CountColumnValues,ColumnValues)
+            }else if(i == 17 || i == 18){
+                const CountColumnValues = lastTenEntries.map(row => row[1]);
+                const ColumnValues = lastTenEntries.map(row => row[i-15]);
+                objects[i].draw(CountColumnValues,ColumnValues)
+            }
+
+        }else{
+            if(!hidden[i]){
+                objects[i].hide();
+                hidden[i] = true;
             }
         }
     }
+    
+
 }
 
