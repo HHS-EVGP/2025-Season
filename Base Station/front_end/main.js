@@ -20,6 +20,9 @@ function updateContent() {
 
 
 async function fetchAndProcessCSV() {
+    // NEED TO FIX THIS PART::           ||
+    // DOES NOT PULL DATA RIGHT NOW!!    \/
+
     // fetch('/001.data.csv') // TODO: Make this select from 001, 002, 003, and so on
     //     .then(response => response.text())
     //     .then(text => {
