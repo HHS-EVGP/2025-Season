@@ -2,9 +2,12 @@ let items = [];
 let Allitems = [
     'time', 'counter', 'throttle', 'Brake_Pedal',
     'motor_temp', 'Battery_1', 'Battery_2', 'Battery_3', 'Battery_4',
-    'ca_AmpHrs', 'ca_Voltage', 'ca_Current', 'ca_Speed', 'ca_Miles'
+    'ca_AmpHrs', 'ca_Voltage', 'ca_Current', 'ca_Speed', 'ca_Miles',
+    'ca_Voltage_graph', 'ca_Current_graph', 'ca_Speed_graph',
+    'throttle_graph', 'Brake_Pedal_graph'
+
     ];
-var hidden = [false,false,false,false,false,false,false,false,false,false,false,false,false,false];
+var hidden = [false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false];
 const objects = [];
 var lastTenEntries;
 
@@ -50,9 +53,9 @@ objects[10] = new odometer        (225,100, 'Voltage',         0.7, 'V',       5
 objects[11] = new odometer        (375,100, 'Current',         0.7, 'amps',    150,       -20, 6);
 objects[12] = new odometer        ( 75,100, 'Speed',           0.7, 'mph',     50,         0    );
 objects[13] = new odometer_counter(600, 50, 'Miles',           0.7                              );
-objects[14] = new graph           (105,300, 'Speed',           1.0, "Counter", "Speed","mph"    );
-objects[15] = new graph           (315,300, 'Voltage',         1.0, "Counter", "Voltage","V"    );
-objects[16] = new graph           (525,300, 'Current',         1.0, "Counter", "Current","amps" );
+objects[14] = new graph           (315,300, 'Voltage',         1.0, "Counter", "Voltage","V"    );
+objects[15] = new graph           (525,300, 'Current',         1.0, "Counter", "Current","amps" );
+objects[16] = new graph           (105,300, 'Speed',           1.0, "Counter", "Speed","mph"    );
 objects[17] = new graph           (735,300, 'Throttle',        1.0, "Counter", "Throttle","%"   );
 objects[18] = new graph           (945,300, 'Brake',           1.0, "Counter", "Brake","%"      );
 
@@ -94,10 +97,18 @@ async function draw() {
                 hidden[i] = false;
                 objects[i].setup();
             }
+            
             //Update the object(s)
-
             if(i >= 0 && i <= 13){
-                console.log(lastTenEntries)
+                objects[i].draw(lastTenEntries[9][i]);
+            }else if(i >= 14 && i <= 16){
+                const CountColumnValues = lastTenEntries.map(row => row[1]);
+                const ColumnValues = lastTenEntries.map(row => row[i-4]);
+                objects[i].draw(CountColumnValues,ColumnValues)
+            }else if(i == 17 || i == 18){
+                const CountColumnValues = lastTenEntries.map(row => row[1]);
+                const ColumnValues = lastTenEntries.map(row => row[i-15]);
+                objects[i].draw(CountColumnValues,ColumnValues)
             }
 
         }else{
