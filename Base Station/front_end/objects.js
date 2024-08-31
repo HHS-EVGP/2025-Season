@@ -16,11 +16,11 @@ class odometer {
     }
     setup(){
         strokeWeight(0);
-        fill('#5D6D7E');
+        fill('#7c93ac');
         circle(this.x, this.y, this.size);
         fill('#D6DBDF');    
         arc(this.x, this.y, this.size, this.size, PI - QUARTER_PI , QUARTER_PI);
-        fill('#5D6D7E'); 
+        fill('#7c93ac'); 
         circle(this.x, this.y, this.size*0.9);
         textSize(this.size*0.075);
         fill('#17202A'); 
@@ -65,14 +65,14 @@ class odometer {
     }
     draw(value) {
         strokeWeight(0);
-        fill('#5D6D7E');
+        fill('#7c93ac');
         circle(this.x, this.y, this.size);
         this.value = value;
         fill('#D6DBDF');    
         arc(this.x, this.y, this.size, this.size, PI - QUARTER_PI , QUARTER_PI);
         fill('#17202A');
         arc(this.x, this.y, this.size, this.size, PI-QUARTER_PI, PI-QUARTER_PI + (((270/(this.max-this.min))*(this.value-this.min))*PI/180));
-        fill('#5D6D7E'); 
+        fill('#7c93ac'); 
         circle(this.x, this.y, this.size*0.9);
         textSize(this.size*0.075);
         fill('#17202A'); 

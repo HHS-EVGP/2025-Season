@@ -30,19 +30,11 @@
     </div>
     <div class="sideBar center debug">
         <div>
-            <p>School ID</p>
-            <select id="schoolSelection" onchange="updateContent()">
-                <option value="HHS">HHS</option>
-                <option value="RHS">RHS</option>
-            </select>
-        </div>
-        <div>
             <p>Item Select</p>
             <select id="itemSelection" onchange="updateContent()">
                 <option value="All">All</option>
                 <option value="CycleAnalyst">Cycle Analyst</option>
                 <option value="Tempatures">Tempatures</option>
-                <option value="IMU">IMU</option>
                 <option value="Custom">Custom</option>
             </select>
         </div>
@@ -52,14 +44,23 @@
                 <input type="checkbox" id="ca_AmpHrs" name="Amp Hours">
                 <label for="ca_AmpHrs">Amp Hours</label>
                 <br>
+                <input type="checkbox" id="ca_Speed" name="Speed">
+                <label for="ca_Speed">Speed</label>
+                <br>
+                <input type="checkbox" id="ca_Speed_graph" name="Speed Graph">
+                <label for="ca_Speed_graph">Speed Graph</label>
+                <br>
                 <input type="checkbox" id="ca_Voltage" name="Voltage">
                 <label for="ca_Voltage">Voltage</label>
+                <br>
+                <input type="checkbox" id="ca_Voltage_graph" name="Voltage Graph">
+                <label for="ca_Voltage_graph">Voltage Graph</label>
                 <br>
                 <input type="checkbox" id="ca_Current" name="Current">
                 <label for="ca_Current">Current</label>
                 <br>
-                <input type="checkbox" id="ca_Speed" name="Speed">
-                <label for="ca_Speed">Speed</label>
+                <input type="checkbox" id="ca_Current_graph" name="Current Graph">
+                <label for="ca_Current_graph">Current Graph</label>
                 <br>
                 <input type="checkbox" id="ca_Miles" name="Miles">
                 <label for="ca_Miles">Miles</label>
@@ -76,28 +77,12 @@
                 <br>
                 <input type="checkbox" id="Battery_2" name="Battery Temp 2">
                 <label for="Battery_2">Battery Temp 2</label>
-            </div>
-        </div>
-        <div id="IMUSelectionArea" style="display: none;">
-            <div class="left">
-                <b>&nbsp;IMU</b><br>
-                <input type="checkbox" id="IMU_Accel_x" name="Accelerometer X">
-                <label for="IMU_Accel_x">Accelerometer X</label>
                 <br>
-                <input type="checkbox" id="IMU_Accel_y" name="Accelerometer Y">
-                <label for="IMU_Accel_y">Accelerometer Y</label>
+                <input type="checkbox" id="Battery_3" name="Battery Temp 3">
+                <label for="Battery_3">Battery Temp 3</label>
                 <br>
-                <input type="checkbox" id="IMU_Accel_z" name="Accelerometer Z">
-                <label for="IMU_Accel_z">Accelerometer Z</label>
-                <br>
-                <input type="checkbox" id="IMU_Gyro_x" name="Gyroscope X">
-                <label for="IMU_Gyro_x">Gyroscope X</label>
-                <br>
-                <input type="checkbox" id="IMU_Gyro_y" name="Gyroscope Y">
-                <label for="IMU_Gyro_y">Gyroscope Y</label>
-                <br>
-                <input type="checkbox" id="IMU_Gyro_z" name="Gyroscope Z">
-                <label for="IMU_Gyro_z">Gyroscope Z</label>
+                <input type="checkbox" id="Battery_4" name="Battery Temp 4">
+                <label for="Battery_4">Battery Temp 4</label>
             </div>
         </div>
         <div id="customSelectionArea" style="display: none;">
@@ -106,8 +91,14 @@
                 <input type="checkbox" id="Brake_Pedal" name="Brake Pedal">
                 <label for="Brake_Pedal">Brake Pedal</label>
                 <br>
+                <input type="checkbox" id="Brake_Pedal_graph" name="Brake Pedal Graph">
+                <label for="Brake_Pedal_graph">Brake Pedal Graph</label>
+                <br>
                 <input type="checkbox" id="throttle" name="Throttle">
                 <label for="throttle">Throttle</label>
+                <br>
+                <input type="checkbox" id="throttle_graph" name="Throttle Graph">
+                <label for="throttle_graph">Throttle Graph</label>
                 <br>
                 <input type="checkbox" id="counter" name="Counter">
                 <label for="counter">Counter</label>

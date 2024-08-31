@@ -12,8 +12,6 @@ const objects = [];
 var lastTenEntries;
 
 function updateContent() {
-    // Get the selected value from the dropdown
-    var school = document.getElementById("schoolSelection").value;
     // If set to All, set all items
     if(document.getElementById("itemSelection").value == "All"){
         items = Allitems;
@@ -22,18 +20,18 @@ function updateContent() {
 
 
 async function fetchAndProcessCSV() {
-    fetch('/001.data.csv') // TODO: Make this select from 001, 002, 003, and so on
-        .then(response => response.text())
-        .then(text => {
-            const lines = text.trim().split('\n');
-            // Assuming there's no header row, adjust if there is one
-            const lastTenLines = lines.slice(-10);
-            lastTenEntries = lastTenLines.map(line => line.split(','));
-            // return lastTenEntries, lastTenEntries[9];
-            // console.log("lastTenEntries",lastTenEntries);
-            // console.log("lastEntrie",lastTenEntries[9]);
-        })
-        .catch(error => console.error('Error fetching CSV:', error));
+    // fetch('/001.data.csv') // TODO: Make this select from 001, 002, 003, and so on
+    //     .then(response => response.text())
+    //     .then(text => {
+    //         const lines = text.trim().split('\n');
+    //         // Assuming there's no header row, adjust if there is one
+    //         const lastTenLines = lines.slice(-10);
+    //         lastTenEntries = lastTenLines.map(line => line.split(','));
+    //         // return lastTenEntries, lastTenEntries[9];
+    //         // console.log("lastTenEntries",lastTenEntries);
+    //         // console.log("lastEntrie",lastTenEntries[9]);
+    //     })
+    //     .catch(error => console.error('Error fetching CSV:', error));
     lastTenEntries = [
         ["2024-04-10 12:22:51.145637",896,0.2,0.0,102,89,87,90,89.2,20,47,15,20,35],
         ["2024-04-10 12:22:51.666485",897,0.2,0.0,102,89,87,90,89.2,20,47,15,20,35],
