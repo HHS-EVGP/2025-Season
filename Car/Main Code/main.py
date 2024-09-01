@@ -61,11 +61,14 @@ def UART():
 def analogPull():
     data = ""
     temp_data = ""
+
+    # Throttle Value
     try:
         data += f"throttle,{A0.value}|"
     except:
         data += f"throttle,None|"
 
+    # Brake Value
     try:
         data += f"brake,{B3.value}|"
     except:
