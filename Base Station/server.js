@@ -28,7 +28,6 @@ app.get('/list-files', (req, res) => {
       });
 
     res.json(csvFiles);
-    console.log(`Gave Files ${csvFiles}`)
   });
 });
 
