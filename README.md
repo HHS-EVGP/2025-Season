@@ -12,7 +12,6 @@ This project is a data collection and visualization system for an Electric Vehic
 - [Data Flow](#data-flow)
 - [Installation](#installation)
 - [Usage](#usage)
-- [Contributing](#contributing)
 - [License](#license)
 
 ## Overview
@@ -76,7 +75,7 @@ nvm install 20
 npm install express
 ```
 
-## Running the code
+## Usage
 
 1. **Make sure that server.js is running**:
 ```bash
