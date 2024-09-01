@@ -23,30 +23,18 @@ async function fetchAndProcessCSV() {
     // NEED TO FIX THIS PART::           ||
     // DOES NOT PULL DATA RIGHT NOW!!    \/
 
-    // fetch('/001.data.csv') // TODO: Make this select from 001, 002, 003, and so on
-    //     .then(response => response.text())
-    //     .then(text => {
-    //         const lines = text.trim().split('\n');
-    //         // Assuming there's no header row, adjust if there is one
-    //         const lastTenLines = lines.slice(-10);
-    //         lastTenEntries = lastTenLines.map(line => line.split(','));
-    //         // return lastTenEntries, lastTenEntries[9];
-    //         // console.log("lastTenEntries",lastTenEntries);
-    //         // console.log("lastEntrie",lastTenEntries[9]);
-    //     })
-    //     .catch(error => console.error('Error fetching CSV:', error));
-    lastTenEntries = [
-        ["2024-04-10 12:22:51.145637",896,0.2,0.0,102,89,87,90,89.2,20,47,15,20,35],
-        ["2024-04-10 12:22:51.666485",897,0.2,0.0,102,89,87,90,89.2,20,47,15,20,35],
-        ["2024-04-10 12:22:52.186823",898,0.2,0.0,102,89,87,90,89.2,20,47,15,20,35],
-        ["2024-04-10 12:22:52.706740",899,0.2,0.0,102,89,87,90,89.2,20,47,15,20,35],
-        ["2024-04-10 12:22:53.226607",900,0.2,0.0,102,89,87,90,89.2,20,47,15,20,35],
-        ["2024-04-10 12:22:53.743700",901,0.2,0.0,102,89,87,90,89.2,20,47,15,20,35],
-        ["2024-04-10 12:22:54.265764",902,0.2,0.0,102,89,87,90,89.2,20,47,15,22,35],
-        ["2024-04-10 12:22:54.785977",903,0.2,0.0,102,89,87,90,89.2,20,47,15,24,35],
-        ["2024-04-10 12:22:55.301046",904,0.2,0.0,102,89,87,90,89.2,20,47,15,24.3,35],
-        ["2024-04-10 12:22:55.301046",905,0.5,0.1,103,90,91,92,93,21,48,17,30,36.3]
-    ]
+    fetch('/001.data.csv') // TODO: Make this select from 001, 002, 003, and so on
+        .then(response => response.text())
+        .then(text => {
+            const lines = text.trim().split('\n');
+            // Assuming there's no header row, adjust if there is one
+            const lastTenLines = lines.slice(-10);
+            lastTenEntries = lastTenLines.map(line => line.split(','));
+            // return lastTenEntries, lastTenEntries[9];
+            // console.log("lastTenEntries",lastTenEntries);
+            // console.log("lastEntrie",lastTenEntries[9]);
+        })
+        .catch(error => console.error('Error fetching CSV:', error));
 }
 
 updateContent();
