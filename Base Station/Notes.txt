@@ -2,8 +2,6 @@ User:     "data"
 Password: "evgp"
 hostname: "electric.local"
 
+The Command "node server.js" runs the server, and the csv file(s)
 
-Things to setup:
-- lighttpd
-
-You need node.js setup and installed. Version LTS 20.17.0
+You need node.js setup and installed. Testing used version LTS 20.17.0
