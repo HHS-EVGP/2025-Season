@@ -1,34 +1,48 @@
+// Initialize an array to store the selected items to be displayed
 let items = [];
+
+// List of all possible data items that can be visualized
 let Allitems = [
     'time', 'counter', 'throttle', 'Brake_Pedal',
     'motor_temp', 'Battery_1', 'Battery_2', 'Battery_3', 'Battery_4',
     'ca_AmpHrs', 'ca_Voltage', 'ca_Current', 'ca_Speed', 'ca_Miles',
     'ca_Voltage_graph', 'ca_Current_graph', 'ca_Speed_graph',
     'throttle_graph', 'Brake_Pedal_graph'
+];
 
-    ];
+// Array to track visibility state of each object; false means hidden, true means visible
 var hidden = [false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false];
+
+// Array to hold object instances for visualization
 const objects = [];
+
+// Variable to store the last ten entries from the CSV file
 var lastTenEntries;
 
+// Function to update the content displayed based on the selected dropdown option
 function updateContent() {
-    // If set to All, set all items
+    // If "All" is selected, set all items to be displayed
     if(document.getElementById("itemSelection").value == "All"){
         items = Allitems;
     }
 }
 
-
+// Asynchronous function to fetch the latest CSV file and process its data
 async function fetchAndProcessCSV() {
+    // Fetch the list of available CSV files from the server
     const fileListResponse = await fetch('/list-files'); // Ensure this endpoint is set up on your server
     if (!fileListResponse.ok) {
       throw new Error('Error fetching the list of files');
     }
     const files = await fileListResponse.json();
+
+    // Check if any CSV files are available
     if (files.length === 0) {
       console.warn("No CSV files found.");
       return;
     }
+
+    // Fetch and process the newest CSV file
     const newestFile = files[files.length - 1];
     fetch(`/${newestFile}`)
         .then(response => response.text())
@@ -40,9 +54,13 @@ async function fetchAndProcessCSV() {
         .catch(error => console.error('Error fetching CSV:', error));
 }
 
+// Initial setup call to configure the content based on the selected option
 updateContent();
+
+// Variables to hold the real dimensions of the window for canvas setup
 var realWindowsWidth, realWindowsHeight;
 
+// Create instances of objects to visualize different data metrics
 objects[0]  = new plain_text      (650,185, 'Time',            0.9                              );
 objects[1]  = new plain_text      (650,240, 'Counter',         0.9                              );
 objects[2]  = new throttle        (775, 80, 'Throttle',        1.0                              );
@@ -63,59 +81,59 @@ objects[16] = new graph           (105,300, 'Speed',           1.0, "Counter", "
 objects[17] = new graph           (735,300, 'Throttle',        1.0, "Counter", "Throttle","%"   );
 objects[18] = new graph           (945,300, 'Brake',           1.0, "Counter", "Brake","%"      );
 
+// Function to set up the canvas and initialize objects for visualization
 function setup() {
+    // Adjust canvas dimensions based on window size
     realWindowsWidth = windowWidth - 184;
     realWindowsHeight = windowHeight - 104;
     var canvas = createCanvas(1220-184, windowHeight-104);
-    // var canvas = createCanvas(windowWidth-184, windowHeight-104);
-    canvas.parent('p5Canvas');
-    textAlign(CENTER,CENTER);
-    frameRate(20);
+    // var canvas = createCanvas(windowWidth-184, windowHeight-104); // Alternative canvas size
+    canvas.parent('p5Canvas'); // Attach canvas to the HTML element with ID 'p5Canvas'
+    textAlign(CENTER,CENTER); // Center text alignment
+    frameRate(20); // Set the frame rate for drawing
     for (let i = 0; i < objects.length; i++) {
-        objects[i].setup();
+        objects[i].setup(); // Set up each object for visualization
     }
 }
 
+// Asynchronous function to fetch data and redraw objects
 async function draw() {
-    fetchAndProcessCSV();
+    fetchAndProcessCSV(); // Fetch the latest data from the CSV file
     
-    // If the new data failed, try again
+    // If no new data is available, exit the draw function
     if (lastTenEntries == null){
         return;
     }
 
-    // loop through each object
+    // Loop through each object to update its state and draw it
     for (let i = 0; i < objects.length; i++) {
-        // Is this object set to be on the screen
-        // If not, hide
+        // Check if the current item should be displayed on the screen
         if(items.includes(Allitems[i])){
-            //If the object was hidden, set back up
+            // If the object was previously hidden, set it up again
             if(hidden[i]){ 
                 hidden[i] = false;
                 objects[i].setup();
             }
 
-            //Update the object(s)
+            // Update and draw the object with the latest data
             if(i >= 0 && i <= 13){
                 objects[i].draw(lastTenEntries[9][i]);
             }else if(i >= 14 && i <= 16){
                 const CountColumnValues = lastTenEntries.map(row => row[1]);
                 const ColumnValues = lastTenEntries.map(row => row[i-4]);
-                objects[i].draw(CountColumnValues,ColumnValues)
+                objects[i].draw(CountColumnValues, ColumnValues);
             }else if(i == 17 || i == 18){
                 const CountColumnValues = lastTenEntries.map(row => row[1]);
                 const ColumnValues = lastTenEntries.map(row => row[i-15]);
-                objects[i].draw(CountColumnValues,ColumnValues)
+                objects[i].draw(CountColumnValues, ColumnValues);
             }
 
         }else{
+            // If the object should not be displayed and is not already hidden, hide it
             if(!hidden[i]){
                 objects[i].hide();
                 hidden[i] = true;
             }
         }
     }
-    
-
 }
-

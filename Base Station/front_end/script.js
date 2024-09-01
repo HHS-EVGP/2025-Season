@@ -1,63 +1,62 @@
-// Fetch the list of CSV files first
+// Fetch the list of CSV files from the server
 $.ajax({
-  type: "GET",
-  url: "/list-files", // This endpoint should return a list of files
-  dataType: "json",
-  success: function(files) {
-    // Assuming the files are sorted and named '001.data.csv' to '999.data.csv'
+  type: "GET", // HTTP method type for the request
+  url: "/list-files", // Endpoint to fetch the list of CSV files
+  dataType: "json", // Expected data type from the server
+  success: function(files) { // Callback function for successful request
+    // Check if any CSV files are found
     if (files.length === 0) {
-      console.warn("No CSV files found.");
-      return;
+      console.warn("No CSV files found."); // Log a warning if no files are found
+      return; // Exit if no files are found
     }
 
-    // Get the newest file (the last file in the sorted array)
+    // Get the newest CSV file (last file in the sorted array)
     var newestFile = files[files.length - 1];
 
-    // Fetch the data from the newest file
+    // Fetch data from the newest CSV file
     $.ajax({
-      type: "GET",
-      url: `/${newestFile}`,
-      dataType: "text",
-      success: function(data) {
-        var lastTenEntries = getLastTenEntriesFromCSV(data);
+      type: "GET", // HTTP method type for the request
+      url: `/${newestFile}`, // URL for the specific file to fetch
+      dataType: "text", // Expected data type from the server
+      success: function(data) { // Callback function for successful request
+        var lastTenEntries = getLastTenEntriesFromCSV(data); // Parse the CSV data to get the last 10 entries
 
-        // For example, display in a <div id="data"></div>
+        // Generate HTML content from the last 10 entries
         var htmlContent = lastTenEntries.map(entry => `<p>${entry.join(', ')}</p>`).join('');
 
-        // Check if the element with ID 'data' exists before trying to set its innerHTML
+        // Check if the HTML element with ID 'data' exists
         var dataElement = document.getElementById('data');
         if (dataElement) {
-          dataElement.innerHTML = htmlContent;
+          dataElement.innerHTML = htmlContent; // Update the inner HTML with the parsed data
         } else {
-          console.warn("Element with ID 'data' not found.");
+          console.warn("Element with ID 'data' not found."); // Log a warning if the element is not found
         }
       },
-
-      error: function(xhr, status, error) {
-        console.log("Error fetching the CSV file: " + error);
+      error: function(xhr, status, error) { // Callback function for errors
+        console.log("Error fetching the CSV file: " + error); // Log the error message
       }
     });
   },
-  error: function(xhr, status, error) {
-    console.log("Error fetching the list of files: " + error);
+  error: function(xhr, status, error) { // Callback function for errors
+    console.log("Error fetching the list of files: " + error); // Log the error message
   }
 });
 
+// Function to parse the CSV data and extract the last 10 entries
 function getLastTenEntriesFromCSV(csvData) {
-  // Split the CSV data into lines
+  // Split the CSV data into individual lines
   var lines = csvData.split('\n');
 
-  // Remove the header line if your CSV has one
-  // lines.shift(); // Uncomment this if there's a header
+  // Remove the header line if the CSV file contains one
+  // lines.shift(); // Uncomment this line if there's a header to remove
 
-  // Extract the last 10 lines
+  // Extract the last 10 lines from the CSV data
   var lastTenLines = lines.slice(-11);
 
-  // Parse each of the last 10 lines into an array of values
+  // Convert each line into an array of values
   var lastTenEntries = lastTenLines.map(line => {
-    // Assuming comma (,) is your delimiter; change if needed
-    return line.split(',');
+    return line.split(','); // Split the line by commas to get individual values
   });
 
-  return lastTenEntries;
+  return lastTenEntries; // Return the parsed entries
 }
