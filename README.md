@@ -95,3 +95,5 @@ Open a web browser and navigate to http://electric.local (or the IP address of t
 
 ## License
 This project is licensed under the MIT License. 
+
+Also, this whole README.md file was writen by ChatGPT. 😀
