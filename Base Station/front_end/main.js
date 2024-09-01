@@ -63,7 +63,8 @@ objects[18] = new graph           (945,300, 'Brake',           1.0, "Counter", "
 function setup() {
     realWindowsWidth = windowWidth - 184;
     realWindowsHeight = windowHeight - 104;
-    var canvas = createCanvas(windowWidth-184, windowHeight-104);
+    var canvas = createCanvas(1220-184, windowHeight-104);
+    // var canvas = createCanvas(windowWidth-184, windowHeight-104);
     canvas.parent('p5Canvas');
     textAlign(CENTER,CENTER);
     frameRate(20);
