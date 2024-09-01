@@ -20,19 +20,22 @@ function updateContent() {
 
 
 async function fetchAndProcessCSV() {
-    // NEED TO FIX THIS PART::           ||
-    // DOES NOT PULL DATA RIGHT NOW!!    \/
-
-    fetch('/001.data.csv') // TODO: Make this select from 001, 002, 003, and so on
+    const fileListResponse = await fetch('/list-files'); // Ensure this endpoint is set up on your server
+    if (!fileListResponse.ok) {
+      throw new Error('Error fetching the list of files');
+    }
+    const files = await fileListResponse.json();
+    if (files.length === 0) {
+      console.warn("No CSV files found.");
+      return;
+    }
+    const newestFile = files[files.length - 1];
+    fetch(`/${newestFile}`)
         .then(response => response.text())
         .then(text => {
             const lines = text.trim().split('\n');
-            // Assuming there's no header row, adjust if there is one
             const lastTenLines = lines.slice(-10);
             lastTenEntries = lastTenLines.map(line => line.split(','));
-            // return lastTenEntries, lastTenEntries[9];
-            // console.log("lastTenEntries",lastTenEntries);
-            // console.log("lastEntrie",lastTenEntries[9]);
         })
         .catch(error => console.error('Error fetching CSV:', error));
 }
