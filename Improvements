@@ -1,0 +1,17 @@
+Possible Improvements: (My Ideas for the Season)
+
+New Features:
+  -Add IMU (Gps, Accelerometer, Compass, and Gyroscope) Telemetry
+  -Calculate optimal throttle for efficiency based on current telemetry.
+  -New display for drivers (to relay this information)
+  
+  -New Visualization UI (Not going to lie the current one is good but kind of hard to read)
+  -After Race data Visualizer (map, replay, etc)
+
+  -Virtual Machine images of pis or Virtual development environments for debugging code
+  -Have pi automatically sync the repository on startup (Then we would want to use stable and development branches)
+
+
+Clean code:
+  -Consistent formatting and commenting
+  -Use names like, datawriter.py instead of main.py (we Currently have multiple main.py and index.html files)

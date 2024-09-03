@@ -9,8 +9,8 @@ Install Updates/Things needed:
   - pip3 install adafruit-circuitpython-rfm9x
   - pip3 install adafruit-circuitpython-lsm6ds
   - pip3 install pyserial
-  - sudo apt-get install dos2unix
+  - sudo apt install dos2unix  # Apt is better than apt-get in general because it is newer and more convenient
 - All In one Commands:
-  - pip3 install adafruit-circuitpython-ads1x15 Adafruit-ADS1x15 adafruit-circuitpython-rfm9x adafruit-circuitpython-lsm6ds pyserial && sudo apt-get install -y dos2unix
+  - pip3 install adafruit-circuitpython-ads1x15 Adafruit-ADS1x15 adafruit-circuitpython-rfm9x adafruit-circuitpython-lsm6ds pyserial && sudo apt install -y dos2unix
 Check if everything is running:
 - sudo systemctl status transmit.service code_check.service buttons.service
