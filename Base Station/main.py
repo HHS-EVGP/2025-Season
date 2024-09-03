@@ -5,7 +5,6 @@ import csv
 import os
 import time
 from datetime import datetime
-from datetime import date
 from digitalio import DigitalInOut
 
 # Initialize the RFM9x LoRa Radio with specified SPI and GPIO configurations
@@ -22,9 +21,9 @@ index = 1  # Start with the first index for the data log file
 counter_var = 0  # Initialize a counter to keep track of data entries
 
 # Find the next available log file name in the specified directory
-while os.path.exists(f"/home/data/front_end/{index:03}.data.log"):
+while os.path.exists(f"/home/data/front_end/{index:03}.data.csv"):
     index += 1
-new_file_name = f"/home/data/front_end/{index:03}_{date.today()}.data.log"
+new_file_name = f"/home/data/front_end/{index:03}.data.csv"
 
 # Define the CSV column headers
 fieldnames = [
