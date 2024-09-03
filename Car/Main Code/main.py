@@ -1,15 +1,15 @@
-import adafruit_ads1x15.ads1115 as ADS
-import adafruit_rfm9x
-import board
-import busio
+import adafruit_ads1x15.ads1115 as ADS # type: ignore
+import adafruit_rfm9x # type: ignore
+import board # type: ignore
+import busio # type: ignore
 import os
 import time
-import serial
+import serial # type: ignore
 import logging
-import RPi.GPIO as GPIO 
-from adafruit_ads1x15.analog_in import AnalogIn
-from digitalio import DigitalInOut, Direction, Pull
-from adafruit_lsm6ds.lsm6dsox import LSM6DSOX
+import RPi.GPIO as GPIO  # type: ignore
+from adafruit_ads1x15.analog_in import AnalogIn # type: ignore
+from digitalio import DigitalInOut, Direction, Pull # type: ignore
+from adafruit_lsm6ds.lsm6dsox import LSM6DSOX # type: ignore
 
 print("I guess all of the packages loaded! (:")
 

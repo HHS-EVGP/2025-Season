@@ -1,11 +1,11 @@
-import adafruit_rfm9x
-import board
-import busio
+import adafruit_rfm9x # type: ignore
+import board # type: ignore
+import busio # type: ignore
 import csv
 import os
 import time
 from datetime import datetime
-from digitalio import DigitalInOut
+from digitalio import DigitalInOut # type: ignore
 
 freq = 432.0
 

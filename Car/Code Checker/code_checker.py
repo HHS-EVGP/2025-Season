@@ -1,6 +1,6 @@
 import os  # I think it's better to use subprocess for this. but quick code for example
 import time
-import RPi.GPIO as GPIO           # import RPi.GPIO module  
+import RPi.GPIO as GPIO # type: ignore           # import RPi.GPIO module  
 
 code_status_led = None # SET THESE
 code_error_led = None # SET THESE

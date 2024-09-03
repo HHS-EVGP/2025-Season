@@ -1,6 +1,6 @@
 #!/usr/bin/python
 
-import RPi.GPIO as gpio
+import RPi.GPIO as gpio # type: ignore
 from subprocess import call
 import time
 from functions.start import start_service
