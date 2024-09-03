@@ -7,15 +7,17 @@ import time
 from datetime import datetime
 from digitalio import DigitalInOut
 
+freq = 432.0
+
 # Initialize the RFM9x LoRa Radio with specified SPI and GPIO configurations
 rfm9x = adafruit_rfm9x.RFM9x(
     busio.SPI(board.SCK, MOSI=board.MOSI, MISO=board.MISO),
     DigitalInOut(board.CE1),
     DigitalInOut(board.D25),
-    433.0,
+    freq,
     high_power=True
 )
-rfm9x.tx_power = 23  # Set transmission power level
+rfm9x.tx_power = 12  # Set transmission power level
 
 index = 1  # Start with the first index for the data log file
 counter_var = 0  # Initialize a counter to keep track of data entries

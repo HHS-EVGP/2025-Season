@@ -15,6 +15,7 @@ print("I guess all of the packages loaded! (:")
 
 # Make sure to replace with your schools ID (Whatever you want, just not the same as someone else)
 school_id = "hhs"
+freq = 432.0
 
 #Setup Send LED
 sendLED = 24
@@ -22,7 +23,7 @@ GPIO.setmode(GPIO.BCM)
 GPIO.setup(sendLED, GPIO.OUT)
 GPIO.output(sendLED, 0)
 #Setup & Configure RFM9x LoRa Radio
-rfm9x = adafruit_rfm9x.RFM9x(busio.SPI(board.SCK, MOSI=board.MOSI, MISO=board.MISO), DigitalInOut(board.CE1), DigitalInOut(board.D25), 433.0, high_power = True)
+rfm9x = adafruit_rfm9x.RFM9x(busio.SPI(board.SCK, MOSI=board.MOSI, MISO=board.MISO), DigitalInOut(board.CE1), DigitalInOut(board.D25), freq, high_power = True)
 rfm9x.tx_power = 23
 #Setup i2C & Devices
 i2c = busio.I2C(board.SCL, board.SDA)
