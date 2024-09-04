@@ -1,17 +1,38 @@
+Joshua's Thoughts in **
 Possible Improvements: (My Ideas for the Season)
 
 New Features:
   -Add IMU (Gps, Accelerometer, Compass, and Gyroscope) Telemetry
+    *NOOOOOOOO--- It is a good idea, but we moved away from an IMU last year due to having no use for it. 
+     The car shakes so much, and the IMU's we have are kinda mid, that the data was usless, and was 
+     really heavy. It used up most of the airspace when transmitting the data.*
   -Calculate optimal throttle for efficiency based on current telemetry.
+    *Yes, as long as the drives can't see it.*
   -New display for drivers (to relay this information)
+    *We could, but we have found that the drivers really need to focus more on the race, and not on the data,
+     We have people on the sidelines that can look at the data and relay it back to them over the phone. 
+     When the drivers look at the data, they try and correct on their own, but sometimes we need them to 
+     do things other than what the data is sayting, and so we want to interpret the data better.*
   
   -New Visualization UI (Not going to lie the current one is good but kind of hard to read)
+    *In what ways is it hard? If you want to redo it, by all means go for it, but I have no iterset in redoing 
+     it for a 4th time lol*
   -After Race data Visualizer (map, replay, etc)
+    *Might be cool, seems like a lot of work*
 
   -Virtual Machine images of pis or Virtual development environments for debugging code
+    *VM on a pi that is in the feild seems scary to me... Plus we are using the PI's GPIO and that seems like a hassle
+     to pass into a VM. Not saying its bad, but I don't know how to do it.*
   -Have pi automatically sync the repository on startup (Then we would want to use stable and development branches)
+    *I don't know if that is a good idea or not. The reason I say that is due to the schools stupid WiFi policies, 
+     The PI can not access GitHub or any repos to pull down to, so it makes it really hard to do that. I also do not know
+     if it is worth the hassle. Might be nice*
 
 
 Clean code:
   -Consistent formatting and commenting
+    *HA! Would be very nice, I tried to clean it all up, but I am sure I missed some things*
   -Use names like, datawriter.py instead of main.py (we Currently have multiple main.py and index.html files)
+    *For the python files that is fine, (We would need to make sure that they are being called by the new names then)
+     But for the index.html, you can't change its name. Being index.html means that you don't have to go to site.com/page.html, 
+     you can jsut go to site.com and it automatically goes to index.html.* 
