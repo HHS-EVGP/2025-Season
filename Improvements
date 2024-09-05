@@ -1,5 +1,6 @@
 Joshua's Thoughts in **
 My response in ^^
+Joshua's Thoughts part 2 *^*
 Possible Improvements: (My Ideas for the Season)
 
 New Features:
@@ -12,12 +13,17 @@ New Features:
       for putting all the data in context, and we could roughly calculate the rest from that. 
       Correct me if im wrong, but two more coollums, (be it large ones) does not seem that heavy to add.
       Even it is too hveavy, it would still be usefull to stash the data with timestamps locally on the car and then look at it later.^
+    *^* Ooooooooo. I like this idea. And yes, two more coollums are not that bad, but IMU data is ~6-7 chr per axis, so about 40 chr with
+       IMU data, which is why we movved away from it. As for GPS, I love it. The issue with sending the GPS data live time is 
+       38.457059, -78.924718 that many chrs, so not that bad. But do we need it in real time? That I just don't know. (But yes, we should
+       add it to the car!) *^*
 
   -Calculate optimal throttle for efficiency based on current telemetry.
 
     *Yes, as long as the drives can't see it.*
     ^Now that I think about it yes, real time throttle optimazations could be dangerously distracting,
       but it would still be helpfull to do something like optimal lap time, wich could be track specific. (and not viewed by drivers of course)^
+    *^* Yes we need to do that *^*
 
   -New display for drivers (to relay this information)
 
@@ -37,13 +43,16 @@ New Features:
   -After Race data Visualizer (map, replay, etc)
     *Might be cool, seems like a lot of work*
     ^I'll see if I have time (these optmmistic freshmen)^
+    *^* Trust me, that would be AWESOME, but I have no idea where to start lol *^*
 
   -Virtual Machine images of pis or Virtual development environments for debugging code
 
     *VM on a pi that is in the feild seems scary to me... Plus we are using the PI's GPIO and that seems like a hassle
      to pass into a VM. Not saying its bad, but I don't know how to do it.*
     ^I was taking a look into a QEMU enviroment the other day, and there is some hastle but it seems promising
-     enugh to pay off. The GIPO pins can be emulated, but we could not get any "data" from them^
+     enugh to pay off. The GIPO pins can be emulated, but we could not get any "data" from them^ 
+    *^* I have never heard of QEMU before, I will have to look into it. As long as we can use the GPIO, that sounds cool.
+        I just do not want to have to fight to get GPIO working, because we really need it *^*
 
   -Have pi automatically sync the repository on startup (Then we would want to use stable and development branches)
 
