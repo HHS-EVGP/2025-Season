@@ -8,15 +8,16 @@ New Features:
     *NOOOOOOOO--- It is a good idea, but we moved away from an IMU last year due to having no use for it. 
      The car shakes so much, and the IMU's we have are kinda mid, that the data was usless, and was 
      really heavy. It used up most of the airspace when transmitting the data.*
-    ^Okay, what if we just did GPS data? Longitude and Latitude would we really really important
+    ^Okay, what if we just did GPS data? Longitude and Latitude would be usefull
       for putting all the data in context, and we could roughly calculate the rest from that. 
-      Correct me if im wrong, but two more coollums, (be it large ones) does not seem that heavy to add^
+      Correct me if im wrong, but two more coollums, (be it large ones) does not seem that heavy to add.
+      Even it is too hveavy, it would still be usefull to stash the data with timestamps locally on the car and then look at it later.^
 
   -Calculate optimal throttle for efficiency based on current telemetry.
 
     *Yes, as long as the drives can't see it.*
     ^Now that I think about it yes, real time throttle optimazations could be dangerously distracting,
-      but it would still be helpfull to do something like optimal lap time, wich could be track specific.^
+      but it would still be helpfull to do something like optimal lap time, wich could be track specific. (and not viewed by drivers of course)^
 
   -New display for drivers (to relay this information)
 
