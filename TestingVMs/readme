@@ -1,0 +1,21 @@
+Since I don't pay for fancy github, the large machine files are stored here:
+
+https://drive.google.com/drive/folders/1aoRKig_TkdZX90rn-arGikm48EsE63kg?usp=sharing
+
+You have to have a HCPS email to acces this, since the shool gives us unlimited storage. I might change its accesablility in the future, but the enviroment is going to be specific for our team's car, so I do not see much need for anyone else to use it.
+
+YOU NEED versatile-pb-bullseye-5.10.63.dtb, rpilite.qcow2, AND kernel-qemu-5.10.63-bullseye IN THIS FOLDER for it to run.
+
+-------------------
+
+This is a QEMU emulaton enviroment to try and make it possible to run and debug the code we are writing for raspbery pis on x64 computers.
+IT DOES NOT WORK YET! I can get it to boot, but not to login. Please give me a day or two (Or maybe a few months, im busy).
+
+Prerequisites:
+    qemu-system-arm (I am using version 1:8.2.2+ds-0ubuntu1.2)
+    Sorry Windows users, you will have to figure that one out on your own...
+
+To give it a go, boot it by executing the startup.sh script. (Sorry again Windows users. The script is just the startup command with a bunch of arguments so you could probably figure it out.)
+Be warned, the virtual disk is currently full, so don't try to run anything on it yet.
+
+For a detailed guide, go to: https://gist.github.com/plembo/c4920016312f058209f5765cb9a3a25e
