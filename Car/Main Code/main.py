@@ -1,3 +1,10 @@
+# TODO:
+# Bandwith is tight right now, and all of our NUMERICAl data we are 
+# transimiting as UNICODE strings, wich are very ineficient!
+# If we used a bianary database instead of a csv, we would have way more bandwith, 
+# more redundancy, alongside all of the database managment features the python libray provides.
+# More info to come.
+
 import adafruit_ads1x15.ads1115 as ADS # type: ignore
 import adafruit_rfm9x # type: ignore
 import board # type: ignore

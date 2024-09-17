@@ -71,3 +71,6 @@ Clean code:
      But for the index.html, you can't change its name. Being index.html means that you don't have to go to site.com/page.html, 
      you can jsut go to site.com and it automatically goes to index.html.*
      ^Forgot about the index.html... But In general, our file organization could be more commprehensive.^
+
+  -Fix the jankyness of the CSV system
+    -Using a database would be way more robust while using less bandwidth. It could also handle reading and writing simultaniously. (See main.py in car for more info)
