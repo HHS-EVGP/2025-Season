@@ -9,6 +9,7 @@ import adafruit_ads1x15.ads1115 as ADS # type: ignore
 import adafruit_rfm9x # type: ignore
 import board # type: ignore
 import busio # type: ignore
+import math
 import os
 import time
 import serial # type: ignore
@@ -23,6 +24,13 @@ print("I guess all of the packages loaded! (:")
 # Make sure to replace with your schools ID (Whatever you want, just not the same as someone else)
 school_id = "hhs"
 freq = 432.0
+
+#Setup Thermistor Values
+R1 = 10000.0
+logR2 = R2 = T = 0.0  # Initializing logR2, R2, and T as float values (defaulting to 0.0)
+c1 = 1.009249522e-03
+c2 = 2.378405444e-04
+c3 = 2.019202697e-07
 
 #Setup Send LED
 sendLED = 24
@@ -66,6 +74,14 @@ def UART():
     print(data)
     return f"CA,None,None,None,None,None|"
 
+def thermistor(idx):
+    R2 = R1 * (1023.0 / float(idx) - 1.0)
+    logR2 = math.log(R2)
+    T = 1.0 / (c1 + c2 * logR2 + c3 * logR2**3)
+    T = T - 273.15  # Convert from Kelvin to Celsius
+    T = (T * 9.0) / 5.0 + 32.0  # Convert from Celsius to Fahrenheit
+    return T
+
 def analogPull():
     data = ""
     temp_data = ""
@@ -90,25 +106,25 @@ def analogPull():
 
     # Battery 1 Temperature
     try:
-        temp_data += f"{A2.value},"
+        temp_data += f"{thermistor(A2.value)},"
     except:
         temp_data += "None,"
 
     # Battery 2 Temperature
     try:
-        temp_data += f"{A3.value},"
+        temp_data += f"{thermistor(A3.value)},"
     except:
         temp_data += "None,"
 
     # Battery 3 Temperature
     try:
-        temp_data += f"{B0.value},"
+        temp_data += f"{thermistor(B0.value)},"
     except:
         temp_data += "None,"
 
     # Battery 4 Temperature
     try:
-        temp_data += f"{B1.value}"
+        temp_data += f"{thermistor(B1.value)}"
     except:
         temp_data += "None"
 
