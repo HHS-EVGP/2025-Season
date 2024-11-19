@@ -44,7 +44,7 @@ rfm9x.tx_power = 23
 i2c = busio.I2C(board.SCL, board.SDA)
 analogA = ADS.ADS1115(i2c, address = 0x4A)
 analogB = ADS.ADS1115(i2c, address = 0x4B)
-imu = LSM6DSOX(i2c, address = 0x6A)
+
 #Setup Analog In Ports
 A0 = AnalogIn(analogA, ADS.P0) # throttle
 A1 = AnalogIn(analogA, ADS.P1) # motorTemp
