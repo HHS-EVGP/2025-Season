@@ -183,15 +183,18 @@ def sendRF(data):
     GPIO.output(sendLED, 1)
     print(data)
     rfm9x.send(bytearray(data,'utf-8'))
-    logging.warning(data)
+    
 
 while running:
 
     data_2_send = f"{school_id}|" 
     data_2_send += analogPull()      # Analog sensor data
     data_2_send += UART_CA()         # Cycle Analyst data
-    data_2_send += UART_GPS()        # GPS data
     
     sendRF(data_2_send)
+
+    data_2_send += UART_GPS()
+
+    logging.warning(data_2_send)
     GPIO.output(sendLED, 0)
     time.sleep(0.25)
