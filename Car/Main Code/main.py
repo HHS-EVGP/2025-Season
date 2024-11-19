@@ -48,6 +48,9 @@ analogB = ADS.ADS1115(i2c, address = 0x4B)
 CA704_ADDR = 0x28  # Replace with the actual I2C address -- Cycle Analyst
 GPS704_ADDR = 0x29  # Replace with the actual I2C address -- GPS
 
+# FOR SETTING UP 704', FOLLOW THIS GPT PAGE:
+# https://chatgpt.com/share/673cbcb7-9a74-8010-9a24-c0a5603eb385
+
 #Setup Analog In Ports
 A0 = AnalogIn(analogA, ADS.P0) # throttle
 A1 = AnalogIn(analogA, ADS.P1) # motorTemp
