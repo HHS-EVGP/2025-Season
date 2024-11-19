@@ -13,6 +13,7 @@ import math
 import os
 import time
 import serial # type: ignore
+import smbus # type: ignore
 import logging
 import RPi.GPIO as GPIO  # type: ignore
 from adafruit_ads1x15.analog_in import AnalogIn # type: ignore
@@ -44,6 +45,8 @@ rfm9x.tx_power = 23
 i2c = busio.I2C(board.SCL, board.SDA)
 analogA = ADS.ADS1115(i2c, address = 0x4A)
 analogB = ADS.ADS1115(i2c, address = 0x4B)
+CA704_ADDR = 0x28  # Replace with the actual I2C address -- Cycle Analyst
+GPS704_ADDR = 0x29  # Replace with the actual I2C address -- GPS
 
 #Setup Analog In Ports
 A0 = AnalogIn(analogA, ADS.P0) # throttle
@@ -67,12 +70,56 @@ while os.path.exists(f"/home/car/logs/{index:03}.data.log"):
 new_file_name = f"/home/car/logs/{index:03}.data.log"
 logging.basicConfig(filename=new_file_name, filemode='w', format='%(message)s')
 
-def UART():
+# Function to write to a specific SC18IM704 UART
+def write_to_uart(device_addr, data):
+    try:
+        # Command structure: Start ('S'), data, Stop ('P')
+        command = [ord('S')] + list(data.encode('utf-8')) + [ord('P')]
+        i2c.writeto(device_addr, bytearray(command))
+        print(f"Sent to UART on device {device_addr:02X}: {data}")
+    except Exception as e:
+        print(f"Error writing to UART on device {device_addr:02X}: {e}")
+
+# Function to read from a specific SC18IM704 UART
+def read_from_uart(device_addr, length=10):
+    try:
+        # Command to read data from UART: 'S', I2C address, 'R', 'P'
+        command = [ord('S'), 0x01, ord('R'), ord('P')]
+        i2c.writeto(device_addr, bytearray(command))
+        time.sleep(0.1)  # Allow time for processing
+        response = i2c.readfrom(device_addr, length)  # Adjust length as needed
+        print(f"Received from UART on device {device_addr:02X}: {response}")
+        return response.decode('utf-8', errors='ignore')
+    except Exception as e:
+        print(f"Error reading from UART on device {device_addr:02X}: {e}")
+        return None
+
+# UART handler for Cycle Analyst
+def UART_CA():
     # Send output as: "CA,amp_hours,voltage,current,speed,miles|"
-    data = cycleAnalyst.read(10) # NEEDS WORK TODO
-    print(bytes)
-    print(data)
-    return f"CA,None,None,None,None,None|"
+    try:
+        data = read_from_uart(CA704_ADDR, 10)  # Adjust length for Cycle Analyst
+        if data:
+            # Process Cycle Analyst data here
+            return f"CA,{data.strip()}|"
+        else:
+            return "CA,None,None,None,None,None|"
+    except Exception as e:
+        print(f"Error in UART_CA function: {e}")
+        return "CA,None,None,None,None,None|"
+
+# UART handler for GPS
+def UART_GPS():
+    try:
+        data = read_from_uart(GPS704_ADDR, 128)  # GPS data length can be longer
+        if data:
+            # Process GPS NMEA data here
+            return f"GPS,{data.strip()}|"
+        else:
+            return "GPS,None|"
+    except Exception as e:
+        print(f"Error in UART_GPS function: {e}")
+        return "GPS,None|"
 
 def thermistor(idx):
     R2 = R1 * (1023.0 / float(idx) - 1.0)
@@ -141,8 +188,9 @@ def sendRF(data):
 while running:
 
     data_2_send = f"{school_id}|" 
-    data_2_send += analogPull()
-    data_2_send += UART()
+    data_2_send += analogPull()      # Analog sensor data
+    data_2_send += UART_CA()         # Cycle Analyst data
+    data_2_send += UART_GPS()        # GPS data
     
     sendRF(data_2_send)
     GPIO.output(sendLED, 0)
