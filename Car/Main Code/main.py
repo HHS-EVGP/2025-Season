@@ -24,7 +24,9 @@ print("I guess all of the packages loaded! (:")
 
 # Make sure to replace with your schools ID (Whatever you want, just not the same as someone else)
 school_id = "hhs"
-freq = 432.0
+# school_id = "hhs".encode('utf-8')
+# data_list = []
+freq = 432.0    
 
 #Setup Thermistor Values
 R1 = 10000.0
