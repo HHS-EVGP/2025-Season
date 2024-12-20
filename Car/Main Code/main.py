@@ -1,5 +1,3 @@
-# TODO:
-
 import adafruit_ads1x15.ads1115 as ADS # type: ignore
 import adafruit_rfm9x # type: ignore
 import board # type: ignore
