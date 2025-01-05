@@ -1,3 +1,4 @@
+import sqlite3
 import adafruit_ads1x15.ads1115 as ADS # type: ignore
 import adafruit_rfm9x # type: ignore
 import board # type: ignore
@@ -53,7 +54,7 @@ A2 = AnalogIn(analogA, ADS.P2) # battTemp1
 A3 = AnalogIn(analogA, ADS.P3) # battTemp2
 B0 = AnalogIn(analogB, ADS.P0) # battTemp3
 B1 = AnalogIn(analogB, ADS.P1) # battTemp4
-B2 = AnalogIn(analogB, ADS.P2) # 
+B2 = AnalogIn(analogB, ADS.P2) # ****What does this do???****
 B3 = AnalogIn(analogB, ADS.P3) # brake
 #Setup UART for Cycle Anyalist
 cycleAnalyst = serial.Serial('/dev/serial0',baudrate=9600)
@@ -61,12 +62,10 @@ cycleAnalyst = serial.Serial('/dev/serial0',baudrate=9600)
 running = True
 dataR = None
 conter = 0
-#Setup Logging
-index = 1
-while os.path.exists(f"/home/car/logs/{index:03}.data.log"):
-    index += 1
-new_file_name = f"/home/car/logs/{index:03}.data.log"
-logging.basicConfig(filename=new_file_name, filemode='w', format='%(message)s')
+
+#Link the database to python cursor
+con = sqlite3.connect("telemetry_car.sqlite")
+cur = con.cursor()
 
 # Function to write to a specific SC18IM704 UART
 def write_to_uart(device_addr, data):
@@ -188,7 +187,12 @@ while running:
     data_2_send = f"{school_id}|" 
     data_2_send += analogPull()      # Analog sensor data
     data_2_send += UART_CA()         # Cycle Analyst data
-    
+
+
+    #commit data to local database
+    cur.execute("figure out what SQL statement to put here")
+    con.commit()
+
     sendRF(data_2_send)
 
     data_2_send += UART_GPS()
