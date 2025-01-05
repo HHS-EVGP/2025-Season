@@ -1,4 +1,4 @@
-# EV Data Collection and Visualization System
+# EV Data Collection and Visualization System (EVDCVS)
 
 This project is a data collection and visualization system for an Electric Vehicle (EV) using a Raspberry Pi with an RFM9x LoRa radio. The system collects data, stores it in CSV files, and visualizes it through a web interface.
 
