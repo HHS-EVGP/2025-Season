@@ -8,7 +8,6 @@ import os
 import time
 import serial # type: ignore
 import smbus # type: ignore
-import logging
 import RPi.GPIO as GPIO  # type: ignore
 from adafruit_ads1x15.analog_in import AnalogIn # type: ignore
 from digitalio import DigitalInOut, Direction, Pull # type: ignore
@@ -20,7 +19,8 @@ print("I guess all of the packages loaded! (:")
 school_id = "hhs"
 # school_id = "hhs".encode('utf-8')
 # data_list = []
-freq = 432.0    
+freq = 432.0
+#freq = 915.0 #Reigion 2 ISM band (US, Canada, South America)
 
 #Setup Thermistor Values
 R1 = 10000.0
@@ -188,15 +188,12 @@ while running:
     data_2_send += analogPull()      # Analog sensor data
     data_2_send += UART_CA()         # Cycle Analyst data
 
-
-    #commit data to local database
-    cur.execute("figure out what SQL statement to put here")
-    con.commit()
-
     sendRF(data_2_send)
 
     data_2_send += UART_GPS()
 
-    logging.warning(data_2_send)
-    GPIO.output(sendLED, 0)
-    time.sleep(0.25)
+    #commit data to local database
+
+
+    cur.execute("figure out what SQL statement to put here")
+    con.commit()
