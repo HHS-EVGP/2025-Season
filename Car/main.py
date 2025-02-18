@@ -1,4 +1,3 @@
-import sqlite3
 import adafruit_ads1x15.ads1115 as ADS # type: ignore
 import adafruit_rfm9x # type: ignore
 import board # type: ignore
@@ -8,6 +7,7 @@ import os
 import time
 import serial # type: ignore
 import smbus # type: ignore
+import logging
 import RPi.GPIO as GPIO  # type: ignore
 from adafruit_ads1x15.analog_in import AnalogIn # type: ignore
 from digitalio import DigitalInOut, Direction, Pull # type: ignore
@@ -62,10 +62,6 @@ cycleAnalyst = serial.Serial('/dev/serial0',baudrate=9600)
 running = True
 dataR = None
 conter = 0
-
-#Link the database to python cursor
-con = sqlite3.connect("telemetry_car.sqlite")
-cur = con.cursor()
 
 # Function to write to a specific SC18IM704 UART
 def write_to_uart(device_addr, data):
@@ -192,8 +188,7 @@ while running:
 
     data_2_send += UART_GPS()
 
-    #commit data to local database
-
-
-    cur.execute("figure out what SQL statement to put here")
-    con.commit()
+    #Log Data
+    logging.warning(data_2_send)
+    GPIO.output(sendLED, 0)
+    time.sleep(0.25)
