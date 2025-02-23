@@ -29,7 +29,7 @@ con = sqlite3.connect("EVGPTelemetry.sqlite")
 cur = con.cursor()
 
 # Define the name of today's table
-table_name = school_id + "_" + datetime.now().strftime("%Y-%m-%d")
+table_name = school_id + "_" + datetime.now().strftime("%Y_%m_%d")
 print("Today's table name is:", table_name,)
 
 # If table_name does not exist as a table, create it
