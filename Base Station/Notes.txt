@@ -6,8 +6,9 @@ The Command "node server.js" runs the server, and the csv file(s)
 
 You need node.js setup and installed. Testing used version LTS 20.17.0
 
-Install Updates/Things needed:
-- Things that need to be installed:
-  - pip3 install adafruit-circuitpython-rfm9x
+Things that need to be installed:
+  pip3 install adafruit-circuitpython-rfm9x
+  npm install sql.js  
+
 Check if it is running:
-- sudo systemctl status receive.service
+  sudo systemctl status receive.service

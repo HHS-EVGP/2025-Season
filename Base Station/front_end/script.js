@@ -16,8 +16,8 @@ $.ajax({
     // Fetch data from the newest CSV file
     $.ajax({
       type: "GET", // HTTP method type for the request
-      url: `/${newestFile}`, // URL for the specific file to fetch
-      dataType: "text", // Expected data type from the server
+      url: `/EVGPTelemetry.sqlite`,
+      dataType: "binary", // Expected data type from the server
       success: function(data) { // Callback function for successful request
         var lastTenEntries = getLastTenEntriesFromCSV(data); // Parse the CSV data to get the last 10 entries
 
@@ -43,9 +43,9 @@ $.ajax({
 });
 
 // Function to parse the CSV data and extract the last 10 entries
-function getLastTenEntriesFromCSV(csvData) {
+function getLastTenEntriesFromCSV(dbData) {
   // Split the CSV data into individual lines
-  var lines = csvData.split('\n');
+  var lines = dbData.split('\n');
 
   // Remove the header line if the CSV file contains one
   // lines.shift(); // Uncomment this line if there's a header to remove

@@ -16,7 +16,7 @@ var hidden = [false,false,false,false,false,false,false,false,false,false,false,
 // Array to hold object instances for visualization
 const objects = [];
 
-// Variable to store the last ten entries from the CSV file
+// Variable to store the last ten entries from the Database
 var lastTenEntries;
 
 // Function to update the content displayed based on the selected dropdown option
@@ -27,31 +27,26 @@ function updateContent() {
     }
 }
 
-// Asynchronous function to fetch the latest CSV file and process its data
-async function fetchAndProcessCSV() {
-    // Fetch the list of available CSV files from the server
-    const fileListResponse = await fetch('/list-files'); // Ensure this endpoint is set up on your server
-    if (!fileListResponse.ok) {
-      throw new Error('Error fetching the list of files');
-    }
-    const files = await fileListResponse.json();
+// Set up modules to link the database
+// Requires sql.js to be installed with npm
+import { readFileSync } from 'fs';
+import initSqlJs from 'sql-wasm.js';
+const dbfile = readFileSync('../EVGPTelemetry.sqlite');
 
-    // Check if any CSV files are available
-    if (files.length === 0) {
-      console.warn("No CSV files found.");
-      return;
-    }
+// Asynchronous function to fetch the latest table form the database, and process its data
+async function fetchAndProcessDB() {
 
-    // Fetch and process the newest CSV file
-    const newestFile = files[files.length - 1];
-    fetch(`/${newestFile}`)
-        .then(response => response.text())
-        .then(text => {
-            const lines = text.trim().split('\n');
-            const lastTenLines = lines.slice(-10);
-            lastTenEntries = lastTenLines.map(line => line.split(','));
-        })
-        .catch(error => console.error('Error fetching CSV:', error));
+    const SQL = initSqlJs();
+    const db = new SQL.Database(dbfile);
+
+    // Get the name of today's table
+    const table_name = db.exec("SELECT name FROM sqlite_schema WHERE type = 'table' AND name LIKE %'${new Date().toISOString().split('T')[0].replace(/-/g, '_')}'");
+    // Using an sql query makes it so school_id does not need to be defined in a third place
+
+    // Query the last ten entries from the latest table
+    const lastTenSQL = db.exec("SELECT * FROM ${table_name} ORDER BY rowid ASC LIMIT 10;");
+    lastTenEntries = lastTenSQL[0].values; // I think this is the right format???
+
 }
 
 // Initial setup call to configure the content based on the selected option
@@ -98,7 +93,7 @@ function setup() {
 
 // Asynchronous function to fetch data and redraw objects
 async function draw() {
-    fetchAndProcessCSV(); // Fetch the latest data from the CSV file
+    fetchAndProcessDB(); // Fetch the latest data from the Database
     
     // If no new data is available, exit the draw function
     if (lastTenEntries == null){
