@@ -27,6 +27,6 @@ Base station: (Tested on pi 3b+)
 
 Documentation to come once node.js is set up
 
-### Akdnoledgements
+### Acknowledgements
 
 *This project is licensed under the MIT License.*
