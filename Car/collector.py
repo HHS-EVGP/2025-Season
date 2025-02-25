@@ -1,6 +1,6 @@
 import busio # type: ignore
 import math
-import os
+import subprocess
 import time
 import serial # type: ignore
 import smbus # type: ignore
@@ -14,7 +14,7 @@ print("I guess all of the packages loaded! (:")
 
 # Make sure to replace with your schools ID (Whatever you want, just not the same as someone else)
 school_id = "hhs"
-freq = 915.0 #Reigion 2 ISM band (US, Canada, South America)
+freq = 915 #Reigion 2 ISM band (US, Canada, South America)
 
 #Setup Thermistor Values
 R1 = 10000.0
@@ -28,9 +28,6 @@ sendLED = 24
 GPIO.setmode(GPIO.BCM)
 GPIO.setup(sendLED, GPIO.OUT)
 GPIO.output(sendLED, 0)
-#Setup & Configure RFM9x LoRa Radio
-rfm9x = adafruit_rfm9x.RFM9x(busio.SPI(board.SCK, MOSI=board.MOSI, MISO=board.MISO), DigitalInOut(board.CE1), DigitalInOut(board.D25), freq, high_power = True)
-rfm9x.tx_power = 23
 #Setup i2C & Devices
 i2c = busio.I2C(board.SCL, board.SDA)
 analogA = ADS.ADS1115(i2c, address = 0x4A)
@@ -169,18 +166,17 @@ def analogPull():
 def sendRF(data):
     GPIO.output(sendLED, 1)
     print(data)
-    rfm9x.send(bytearray(data,'utf-8'))
-    
+    subprocess.run(["./sendook", "-f", "{freq}M", data])
 
 while running:
 
     data_2_send = f"{school_id}|" 
     data_2_send += analogPull()      # Analog sensor data
     data_2_send += UART_CA()         # Cycle Analyst data
-
-    sendRF(data_2_send)
-
     data_2_send += UART_GPS()
+
+    bytes_2_send = data_2_send.encode('utf-8')
+    sendRF(bytes_2_send)
 
     #Log Data
     logging.warning(data_2_send)
