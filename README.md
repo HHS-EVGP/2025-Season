@@ -8,7 +8,7 @@ The basic structure of the system is as follows:
 
   - [collector.py](/Car/collector.py) receives data from various sources on the car, and transmits it using [rpitx] (https://github.com/F5OEO/rpitx) and on-off keying
 
-  -[decoder.py] (/Base Station/decoder.py) uses [gnuradio] (https://www.gnuradio.org/) and an [rtl-sdr](https://www.rtl-sdr.com/) on the base station to decode the transmitted data, write it to a database, and store the data in a temporary JSON
+  - [decoder.py] (/Base Station/decoder.py) uses [gnuradio] (https://www.gnuradio.org/) and an [rtl-sdr](https://www.rtl-sdr.com/) on the base station to decode the transmitted data, write it to a database, and store the data in a temporary JSON
 
   - A node.js server hosts a website to display the data using the temporary JSON
 
