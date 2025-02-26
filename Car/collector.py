@@ -1,20 +1,22 @@
 import busio # type: ignore
-import math
-import subprocess
-import time
 import serial # type: ignore
 import smbus # type: ignore
-import logging
+
 import RPi.GPIO as GPIO  # type: ignore
 from adafruit_ads1x15.analog_in import AnalogIn # type: ignore
 from digitalio import DigitalInOut, Direction, Pull # type: ignore
 from adafruit_lsm6ds.lsm6dsox import LSM6DSOX # type: ignore
 
+import math
+import subprocess
+import time
+import logging
+
 print("I guess all of the packages loaded! (:")
 
 # Make sure to replace with your schools ID (Whatever you want, just not the same as someone else)
 school_id = "hhs"
-freq = 915 #Reigion 2 ISM band (US, Canada, South America)
+freq = 915  #Reigion 2 ISM band (US, Canada, South America) (In MHz)
 
 #Setup Thermistor Values
 R1 = 10000.0
@@ -166,14 +168,15 @@ def analogPull():
 def sendRF(data):
     GPIO.output(sendLED, 1)
     print(data)
-    subprocess.run(["./sendook", "-f", "{freq}M", data])
+    output = subprocess.run(["./sendook", "-v -f", f"{freq}M", data], capture_output=True, text=True)
+    print(output)
 
 while running:
 
     data_2_send = f"{school_id}|" 
     data_2_send += analogPull()      # Analog sensor data
     data_2_send += UART_CA()         # Cycle Analyst data
-    data_2_send += UART_GPS()
+    data_2_send += UART_GPS()        # GPS data
 
     bytes_2_send = data_2_send.encode('utf-8')
     sendRF(bytes_2_send)
