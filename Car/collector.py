@@ -16,7 +16,16 @@ print("I guess all of the packages loaded! (:")
 
 # Make sure to replace with your schools ID (Whatever you want, just not the same as someone else)
 school_id = "hhs"
-freq = 915  #Reigion 2 ISM band (US, Canada, South America) (In MHz)
+
+#Transmission Variables
+freq = 915 # Frequency in MHz
+sendtimes = 1 # Number of times to send the message (For redundancy)
+
+#Current values are as small as is possible
+Zus = 12 # Pulse duration of bit 0 in µs
+Ous = 13 # Pulse duration of bit 1 in µs
+Gus = 11 # Duration of gap between bits in µs
+Pus = 14 # Duration of pauses between messages in µs
 
 #Setup Thermistor Values
 R1 = 10000.0
@@ -167,9 +176,8 @@ def analogPull():
 
 def sendRF(data):
     GPIO.output(sendLED, 1)
-    print(data)
-    output = subprocess.run(["./sendook", "-v -f", f"{freq}M", data], capture_output=True, text=True)
-    print(output)
+    subprocess.run(["sudo ./sendook -0", Zus, "-1", Ous, "-g", Gus, "-p", Pus, "-f", freq, "-r", snedtimes, "01111110", data]) # 01111110 Is ASCII for ~ which is used to seperate messages
+    print("Sent:", data,)
 
 while running:
 
@@ -178,8 +186,8 @@ while running:
     data_2_send += UART_CA()         # Cycle Analyst data
     data_2_send += UART_GPS()        # GPS data
 
-    bytes_2_send = data_2_send.encode('utf-8')
-    sendRF(bytes_2_send)
+    bin_2_send = ' '.join(format(ord(char), '08b') for char in data_2_send) #Format strings into binary
+    sendRF(bin_2_send)
 
     #Log Data
     logging.warning(data_2_send)
