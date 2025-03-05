@@ -1,11 +1,11 @@
 import busio # type: ignore
 import serial # type: ignore
-import smbus # type: ignore
 
 import RPi.GPIO as GPIO  # type: ignore
 from adafruit_ads1x15.analog_in import AnalogIn # type: ignore
-from digitalio import DigitalInOut, Direction, Pull # type: ignore
+import board # type: ignore
 from adafruit_lsm6ds.lsm6dsox import LSM6DSOX # type: ignore
+from adafruit_ads1x15.ads1115 import ADS # type: ignore
 
 import math
 import subprocess
@@ -19,13 +19,8 @@ school_id = "hhs"
 
 #Transmission Variables
 freq = 915 # Frequency in MHz
-sendtimes = 1 # Number of times to send the message (For redundancy)
-
-#Current values are as small as is possible
-Zus = 12 # Pulse duration of bit 0 in µs
-Ous = 13 # Pulse duration of bit 1 in µs
-Gus = 11 # Duration of gap between bits in µs
-Pus = 14 # Duration of pauses between messages in µs
+Pus = 10 # Duration of a 1 or 0 pulse in µs
+Gus = 0 # Duration of gap between bits in µs
 
 #Setup Thermistor Values
 R1 = 10000.0
@@ -176,12 +171,13 @@ def analogPull():
 
 def sendRF(data):
     GPIO.output(sendLED, 1)
-    subprocess.run(["sudo ./sendook -0", Zus, "-1", Ous, "-g", Gus, "-p", Pus, "-f", freq, "-r", snedtimes, "01111110", data]) # 01111110 Is ASCII for ~ which is used to seperate messages
+    subprocess.run(["sudo ./sendook -0", Pus, "-1", Pus, "-g", Gus, "-f", freq, "11111111", data, "11111111"]) # 11111111 is the start and end message handshake
     print("Sent:", data,)
 
 while running:
 
     data_2_send = f"{school_id}|" 
+    data_2_send += time.time()       # Timestamp
     data_2_send += analogPull()      # Analog sensor data
     data_2_send += UART_CA()         # Cycle Analyst data
     data_2_send += UART_GPS()        # GPS data
