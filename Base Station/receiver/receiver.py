@@ -5,7 +5,7 @@
 # SPDX-License-Identifier: GPL-3.0
 #
 # GNU Radio Python Flow Graph
-# Title: EVGP OOK Decoder
+# Title: EVGP OOK Receiver
 # GNU Radio version: 3.10.9.2
 
 from gnuradio import blocks
@@ -18,20 +18,21 @@ from argparse import ArgumentParser
 from gnuradio.eng_arg import eng_float, intx
 from gnuradio import eng_notation
 from gnuradio import soapy
-import ookdecode_epy_block_0 as epy_block_0  # embedded python block
 
 
 
 
-class ookdecode(gr.top_block):
+class receiver(gr.top_block):
 
     def __init__(self):
-        gr.top_block.__init__(self, "EVGP OOK Decoder", catch_exceptions=True)
+        gr.top_block.__init__(self, "EVGP OOK Receiver", catch_exceptions=True)
 
         ##################################################
         # Variables
         ##################################################
-        self.samp_rate = samp_rate = 2400000
+        self.samp_rate = samp_rate = 2000000
+        self.lowthreshold = lowthreshold = 0.2
+        self.highthreshold = highthreshold = 0.04
         self.freq = freq = 915000000
 
         ##################################################
@@ -73,8 +74,10 @@ class ookdecode(gr.top_block):
         self._soapy_rtlsdr_source_0_gain_value = 20
         self.set_soapy_rtlsdr_source_0_gain_mode(0, bool(False))
         self.set_soapy_rtlsdr_source_0_gain(0, 'TUNER', 20)
-        self.epy_block_0 = epy_block_0.blk(Zero_Duration=12, One_Duration=13, Gap_Duration=11, Pause_Duration=14, Send_Times=1)
         self.blocks_threshold_ff_0 = blocks.threshold_ff(0.2, 0.04, 0)
+        self.blocks_keep_one_in_n_0 = blocks.keep_one_in_n(gr.sizeof_float*1, 20)
+        self.blocks_file_sink_0 = blocks.file_sink(gr.sizeof_float*1, './rfsink', False)
+        self.blocks_file_sink_0.set_unbuffered(True)
         self.blocks_complex_to_mag_squared_0 = blocks.complex_to_mag_squared(1)
 
 
@@ -82,7 +85,8 @@ class ookdecode(gr.top_block):
         # Connections
         ##################################################
         self.connect((self.blocks_complex_to_mag_squared_0, 0), (self.blocks_threshold_ff_0, 0))
-        self.connect((self.blocks_threshold_ff_0, 0), (self.epy_block_0, 0))
+        self.connect((self.blocks_keep_one_in_n_0, 0), (self.blocks_file_sink_0, 0))
+        self.connect((self.blocks_threshold_ff_0, 0), (self.blocks_keep_one_in_n_0, 0))
         self.connect((self.soapy_rtlsdr_source_0, 0), (self.blocks_complex_to_mag_squared_0, 0))
 
 
@@ -92,6 +96,18 @@ class ookdecode(gr.top_block):
     def set_samp_rate(self, samp_rate):
         self.samp_rate = samp_rate
         self.soapy_rtlsdr_source_0.set_sample_rate(0, self.samp_rate)
+
+    def get_lowthreshold(self):
+        return self.lowthreshold
+
+    def set_lowthreshold(self, lowthreshold):
+        self.lowthreshold = lowthreshold
+
+    def get_highthreshold(self):
+        return self.highthreshold
+
+    def set_highthreshold(self, highthreshold):
+        self.highthreshold = highthreshold
 
     def get_freq(self):
         return self.freq
@@ -103,7 +119,7 @@ class ookdecode(gr.top_block):
 
 
 
-def main(top_block_cls=ookdecode, options=None):
+def main(top_block_cls=receiver, options=None):
     tb = top_block_cls()
 
     def sig_handler(sig=None, frame=None):

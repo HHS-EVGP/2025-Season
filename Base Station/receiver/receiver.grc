@@ -11,7 +11,7 @@ options:
     gen_linking: dynamic
     generate_options: no_gui
     hier_block_src_path: '.:'
-    id: ookdecode
+    id: receiver
     max_nouts: '0'
     output_language: python
     placement: (0,0)
@@ -22,13 +22,13 @@ options:
     run_options: prompt
     sizing_mode: fixed
     thread_safe_setters: ''
-    title: EVGP OOK Decoder
+    title: EVGP OOK Receiver
     window_size: (1000,1000)
   states:
     bus_sink: false
     bus_source: false
     bus_structure: null
-    coordinate: [8, 8]
+    coordinate: [288, 232.0]
     rotation: 0
     state: enabled
 
@@ -42,19 +42,43 @@ blocks:
     bus_sink: false
     bus_source: false
     bus_structure: null
-    coordinate: [280, 272.0]
+    coordinate: [288, 416.0]
+    rotation: 0
+    state: enabled
+- name: highthreshold
+  id: variable
+  parameters:
+    comment: ''
+    value: '0.04'
+  states:
+    bus_sink: false
+    bus_source: false
+    bus_structure: null
+    coordinate: [672, 264.0]
+    rotation: 0
+    state: enabled
+- name: lowthreshold
+  id: variable
+  parameters:
+    comment: ''
+    value: '0.2'
+  states:
+    bus_sink: false
+    bus_source: false
+    bus_structure: null
+    coordinate: [680, 424.0]
     rotation: 0
     state: enabled
 - name: samp_rate
   id: variable
   parameters:
     comment: ''
-    value: '2400000'
+    value: '2000000'
   states:
     bus_sink: false
     bus_source: false
     bus_structure: null
-    coordinate: [360, 272.0]
+    coordinate: [368, 416.0]
     rotation: 0
     state: enabled
 - name: blocks_complex_to_mag_squared_0
@@ -70,7 +94,43 @@ blocks:
     bus_sink: false
     bus_source: false
     bus_structure: null
-    coordinate: [504, 360.0]
+    coordinate: [488, 360.0]
+    rotation: 0
+    state: enabled
+- name: blocks_file_sink_0
+  id: blocks_file_sink
+  parameters:
+    affinity: ''
+    alias: ''
+    append: 'False'
+    comment: ''
+    file: ./rfsink
+    type: float
+    unbuffered: 'True'
+    vlen: '1'
+  states:
+    bus_sink: false
+    bus_source: false
+    bus_structure: null
+    coordinate: [1024, 336.0]
+    rotation: 0
+    state: enabled
+- name: blocks_keep_one_in_n_0
+  id: blocks_keep_one_in_n
+  parameters:
+    affinity: ''
+    alias: ''
+    comment: ''
+    maxoutbuf: '0'
+    minoutbuf: '0'
+    n: '20'
+    type: float
+    vlen: '1'
+  states:
+    bus_sink: false
+    bus_source: false
+    bus_structure: null
+    coordinate: [864, 360.0]
     rotation: 0
     state: enabled
 - name: blocks_threshold_ff_0
@@ -88,48 +148,7 @@ blocks:
     bus_sink: false
     bus_source: false
     bus_structure: null
-    coordinate: [696, 336.0]
-    rotation: 0
-    state: enabled
-- name: epy_block_0
-  id: epy_block
-  parameters:
-    Gap_Duration: '11'
-    One_Duration: '13'
-    Pause_Duration: '14'
-    Send_Times: '1'
-    Zero_Duration: '12'
-    _source_code: "\"\"\"\nEmbedded Python Blocks:\n\nEach time this file is saved,\
-      \ GRC will instantiate the first class it finds\nto get ports and parameters\
-      \ of your block. The arguments to __init__  will\nbe the parameters. All of\
-      \ them are required to have default values!\n\"\"\"\n\nimport numpy as np\n\
-      from gnuradio import gr\n\n\nclass blk(gr.sync_block):  # other base classes\
-      \ are basic_block, decim_block, interp_block\n    \"\"\"Put documentation Here\"\
-      \"\"\n\n    def __init__(self, Zero_Duration=12, One_Duration=13, Gap_Duration=11,\
-      \ Pause_Duration=14, Send_Times=1):\n        \"\"\"arguments to this function\
-      \ show up as parameters in GRC\"\"\"\n        gr.sync_block.__init__(\n    \
-      \        self,\n            name='OOK Decode',   # will show up in GRC\n   \
-      \         in_sig=[np.float32],\n            out_sig=None\n        )\n      \
-      \  # if an attribute with the same name as a parameter is found,\n        #\
-      \ a callback is registered (properties work, too).\n        self.Zero_Duration\
-      \ = Zero_Duration\n        self.One_Duration = One_Duration\n        self.Gap_Duration\
-      \ = Gap_Duration\n        self.Pause_Duration = Pause_Duration\n        self.Send_Times\
-      \ = Send_Times\n\n    def work(self, input_items, output_items):\n        output_items[0][:]\
-      \ = input_items[0]\n        print(output_items)\n"
-    affinity: ''
-    alias: ''
-    comment: ''
-    maxoutbuf: '0'
-    minoutbuf: '0'
-  states:
-    _io_cache: ('OOK Decode', 'blk', [('Zero_Duration', '12'), ('One_Duration', '13'),
-      ('Gap_Duration', '11'), ('Pause_Duration', '14'), ('Send_Times', '1')], [('0',
-      'float', 1)], [], 'Put documentation Here', ['Gap_Duration', 'One_Duration',
-      'Pause_Duration', 'Send_Times', 'Zero_Duration'])
-    bus_sink: false
-    bus_source: false
-    bus_structure: null
-    coordinate: [872, 320.0]
+    coordinate: [680, 336.0]
     rotation: 0
     state: enabled
 - name: soapy_rtlsdr_source_0
@@ -159,7 +178,8 @@ blocks:
 
 connections:
 - [blocks_complex_to_mag_squared_0, '0', blocks_threshold_ff_0, '0']
-- [blocks_threshold_ff_0, '0', epy_block_0, '0']
+- [blocks_keep_one_in_n_0, '0', blocks_file_sink_0, '0']
+- [blocks_threshold_ff_0, '0', blocks_keep_one_in_n_0, '0']
 - [soapy_rtlsdr_source_0, '0', blocks_complex_to_mag_squared_0, '0']
 
 metadata:
