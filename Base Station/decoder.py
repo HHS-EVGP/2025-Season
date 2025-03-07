@@ -2,9 +2,13 @@ import sqlite3
 from datetime import datetime
 import time
 import json
-import os
+import numpy
 
+# Transmission variables
 school_id = "hhs"
+preamble = "11111111"
+postamble = "10111111"
+lastPkt = None
 
 #Link the database to the python cursor
 con = sqlite3.connect("EVGPTelemetry.sqlite")
@@ -31,13 +35,13 @@ CREATE TABLE IF NOT EXISTS {} (
     ca_Speed REAL,
     ca_Miles REAL
 )
-""".format(table_name) #The contents of the .format are applied to the {} in the SQL statement
+""".format(table_name)
 
 cur.execute(create_table_sql)
 con.commit()
 
 # Initialize variables to store sensor data
-time = None
+timestamp = None
 throttle = None
 brake_pedal = None
 motor_temp = None
@@ -51,43 +55,43 @@ current = None
 speed = None
 miles = None
 
-# Function to trim the sink file if needed
-def trim_file(filepath, max_size):
-    file_size = os.path.getsize(filepath)
-    if file_size <= max_size:
-        return
+# Function the extract the latest packet from the sink file
+def receivePacket():
+    # Update the sink of received bits to a numpy array
+    sink = numpy.fromfile(open("./receiver/rfsink"), dtype=numpy.float32)
+
+    # Convert array to string
+    bit_string = ''.join(map(str, sink))
+
+    # Find the last complete section
+    end_idx = bit_string.rfind(postamble)
+    start_idx = bit_string.rfind(preamble, 0, end_idx)
     
-    excess_bytes = file_size - max_size
-    
-    with open(filepath, 'rb') as f:
-        f.seek(excess_bytes)  # Skip the excess bytes
-        data = f.read()
-    
-    with open(filepath, 'wb') as f:
-        f.write(data)
-    
-    print(f"Trimmed {excess_bytes} bytes from the start of {filepath}.")
+    # Extract Packet
+    currentPkt = bit_string[start_idx + len(preamble):end_idx]
+
+    return currentPkt
 
 
 while True:
 
-    # Gnuradio saves array of received bits into a file
-    # Come back to this: https://wiki.gnuradio.org/index.php/File_Sink#Reading_from_Python
+    # Get the latest packet
+    currentPkt = receivePacket()
 
-    received_bytes = ""
-
-    received_string = ' '.join(received_bytes[i:i+8] for i in range(0, len(received_bytes), 8))
-
-    if received_string == None:
+    #Make sure the packet is new
+    if currentPkt == lastPkt:
         time.sleep(0.15)  # Pause for a short duration between data checks
         continue
-
-        # Convert the received packet from bytes to a UTF-8 string
-
-    current_row = chr(int("11111111", 2))
+    lastPkt = currentPkt
+    
+    # Convert the received packet from bits to bytes
+    received_bytes = bytearray(int(currentPkt[i:i+8], 2) for i in range(0, len(currentPkt), 8))
+    
+    # Convert the byte array to a UTF-8 string
+    received_string = received_bytes.decode('utf-8', errors='ignore')
 
     # Split the packet into different data sections
-    all_data = current_row.split('|')
+    all_data = received_string.split('|')
 
     # Unpack data sections into individual variables
     school_ID, IN_time, IN_throttle, IN_brake, IN_tempatureData, IN_cycle_analyst, IN_extra_NULL = map(str, all_data)
@@ -123,7 +127,7 @@ while True:
             voltage = voltage if voltage != "None" else ""
             current = current if current != "None" else ""
             speed = speed if speed != "None" else ""
-            miles = miles if miles != "None" else ""
+            miles = miles if miles != "None" else ""            
 
     # Write the processed data to the correct DB table
     insert_data_sql = """
@@ -158,6 +162,3 @@ while True:
 
     with open("lastline.json", "w") as json_file:
         json.dump(data, json_file)
-
-    # Trim the sink file if needed:
-    trim_file("./receiver/rfsink", 5242880) # 5 MB

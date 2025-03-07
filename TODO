@@ -5,6 +5,7 @@ General:
   Priority 1
     -Switch to sqlite database
     -New Radio Protocol???
+    -QUIT SENDING HEADERS EVERY TIME (This is why we don't have bandwidth!!!)
     
   Priority 2
     -Add Gps

@@ -17,10 +17,12 @@ print("I guess all of the packages loaded! (:")
 # Make sure to replace with your schools ID (Whatever you want, just not the same as someone else)
 school_id = "hhs"
 
-#Transmission Variables
+# Transmission Variables
 freq = 915 # Frequency in MHz
 Pus = 10 # Duration of a 1 or 0 pulse in µs
 Gus = 0 # Duration of gap between bits in µs
+preamble = "11111111"
+postamble = "10111111"
 
 #Setup Thermistor Values
 R1 = 10000.0
@@ -160,7 +162,7 @@ def analogPull():
         temp_data += "None,"
 
     # Battery 4 Temperature
-    try:
+    try: 
         temp_data += f"{thermistor(B1.value)}"
     except:
         temp_data += "None"
@@ -171,16 +173,16 @@ def analogPull():
 
 def sendRF(data):
     GPIO.output(sendLED, 1)
-    subprocess.run(["sudo ./sendook -0", Pus, "-1", Pus, "-g", Gus, "-f", freq, "11111111", data, "11111111"]) # 11111111 is the start and end message handshake
+    subprocess.run(["sudo ./sendook -0", Pus, "-1", Pus, "-g", Gus, "-f", freq, "11111111", data, "10111111"]) # 11111111 is the preamble, 10111111 is the postamble
     print("Sent:", data,)
 
 while running:
 
     data_2_send = f"{school_id}|" 
-    data_2_send += time.time()       # Timestamp
-    data_2_send += analogPull()      # Analog sensor data
-    data_2_send += UART_CA()         # Cycle Analyst data
-    data_2_send += UART_GPS()        # GPS data
+    data_2_send += "time"+time.time() # Timestamp
+    data_2_send += analogPull()       # Analog sensor data
+    data_2_send += UART_CA()          # Cycle Analyst data
+    data_2_send += UART_GPS()         # GPS data
 
     bin_2_send = ' '.join(format(ord(char), '08b') for char in data_2_send) #Format strings into binary
     sendRF(bin_2_send)
