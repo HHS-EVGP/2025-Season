@@ -2,7 +2,7 @@ import subprocess
 
 def shutdown_now():
     # Command to restart the Raspberry Pi
-    restart_command = ["sudo", "shutdown", "-h", "now"]
+    restart_command = ["sudo reboot"]
 
     # Execute the restart command
     subprocess.run(restart_command, check=True)

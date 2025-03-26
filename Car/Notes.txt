@@ -5,3 +5,4 @@ hostname: "carpi.local"
 Software needed:
     With pip: adafruit-circuitpython-ads1x15, Adafruit-ADS1x15, adafruit-circuitpython-lsm6ds, pyserial
     With apt: dos2unix
+    Build from github: git clone https://github.com/F5OEO/rpitx && cd rpitx && ./install.sh

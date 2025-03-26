@@ -14,6 +14,8 @@ import struct
 
 print("I guess all of the packages loaded! (:")
 
+OnGPStime = False
+
 # Transmission Variables
 freq = 915 # Frequency in MHz
 Pus = 10 # Duration of a 1 or 0 pulse in µs
@@ -100,20 +102,6 @@ def UART_CA():
         return float('-inf')
 
 # UART handler for GPS
-# GPS Variables
-timestamp = None
-pos_status = None
-lat = None
-lat_dir = None
-lon = None
-lon_dir = None
-speed = None
-track_true = None
-date = None
-mag_var = None
-var_dir = None
-mod_ind = None
-checksum = None
 
 def UART_GPS():
     # The GPS unit returns the same data in varius formats at once (by default)
@@ -123,19 +111,40 @@ def UART_GPS():
         data = read_from_uart(GPS704_ADDR, 128)  # GPS data length can be longer (up to 255 bytes)
         if data:
 
-            input =  data.strip()
+            input = data.strip()
             if "$GPRMC" in input:
                 input = input.split("$GPGGA")[1]
                 input = input.split("\r\n")[0]
 
-                timestamp, pos_status, lat, lat_dir, lon, lon_dir, speed, track_true, date,
+                timestamp, pos_status, lat, lat_dir, lon, lon_dir, speed, track_true, date, \
                 mag_var, var_dir, mod_ind, checksum = input.split(',')
-                
+
                 #If no GPS fix, return -inf for all variables
                 if pos_status == 'V':
                     print("No GPS fix!!!")
                     GPS_x = GPS_y = GPS_z = float('-inf')
-                    return timestamp, GPS_x, GPS_y, GPS_z
+                    return GPS_x, GPS_y, GPS_z
+                
+                # Set System time to gps time if not done yet
+                if OnGPStime == False:
+                    # Extract hours, minutes, and seconds from timestamp
+                    hours = timestamp[:2]
+                    minutes = timestamp[2:4]
+                    seconds = timestamp[4:]
+
+                    # Extract day, month, and year from date
+                    day = date[:2]
+                    month = date[2:4]
+                    year = 2000 + int(date[4:]) # Change this in 75 years; This is a limitation of the $GPRMC format
+
+                    # Format the date and time for the `date` command
+                    formatted_time = f"{year}-{month}-{day} {hours}:{minutes}:{seconds}"
+
+                    # Set the system time using the `date` command
+                    subprocess.run(["sudo date -s", formatted_time], check=True)
+                    print("System time sucessfully set to GPS time:", formatted_time)
+
+                    OnGPStime = True
                 
                 # Convert latitude and longitude to decimal degrees
                 lat = float(lat[:2]) + float(lat[2:]) / 60.0
@@ -158,17 +167,17 @@ def UART_GPS():
                 GPS_y = R * math.cos(lat) * math.sin(lon)
                 GPS_z = R * math.sin(lat)
 
-                return time.time(), GPS_x, GPS_y, GPS_z,
+                return GPS_x, GPS_y, GPS_z,
         
             else:
                 print("No $GPRMC found")
                 GPS_x = GPS_y = GPS_z = float('-inf')
-                return time.time(), GPS_x, GPS_y, GPS_z # Have to use system time instead of GPS time
-                #return UART_GPS() # Restart the function if $GPRMC is not found
+                return GPS_x, GPS_y, GPS_z # Have to use system time instead of GPS time
+                #return UART_GPS() # Restart the function
             
         else:
             GPS_x = GPS_y = GPS_z = float('-inf')
-            return time.time(), GPS_x, GPS_y, GPS_z
+            return GPS_x, GPS_y, GPS_z
         
     except Exception as e:
         print(f"Error in UART_GPS function: {e}")
@@ -230,17 +239,17 @@ def analogPull():
 
 def sendRF(data):
     GPIO.output(sendLED, 1)
-    subprocess.run(["sudo ./sendook -0", Pus, "-1", Pus, "-g", Gus, "-f", freq, preamble, data])
+    subprocess.run(["sudo ./sendook -0", Pus, "-1", Pus, "-g", Gus, "-f", freq, preamble, data]) # Uses GPIO 4 (Pin 7)
     print("Sent:", data,)
 
 while running:
     #Get Data
     amp_hours, voltage, current, speed, miles = UART_CA()
     throttle, brake, motor_temp, batt_1, batt_2, batt_3, batt_4 = analogPull()
-    timestamp, GPS_x, GPS_y, GPS_z = UART_GPS()
+    GPS_x, GPS_y, GPS_z = UART_GPS()
 
     #Format Data
-    for var in [timestamp, amp_hours, voltage, current, speed, miles, throttle, brake, motor_temp, batt_1, batt_2, batt_3, batt_4, GPS_x, GPS_y, GPS_z]:
+    for var in [time.time(), amp_hours, voltage, current, speed, miles, throttle, brake, motor_temp, batt_1, batt_2, batt_3, batt_4, GPS_x, GPS_y, GPS_z]:
         bin_var = ''.join(f'{byte:08b}' for byte in struct.pack('>d', var)) # Encode float to 1s and 0s (64 bit)
         data_2_send += str(bin_var)
 
