@@ -10,14 +10,11 @@
 
 from gnuradio import blocks
 from gnuradio import gr
-from gnuradio.filter import firdes
-from gnuradio.fft import window
 import sys
 import signal
-from argparse import ArgumentParser
 from gnuradio.eng_arg import eng_float, intx
-from gnuradio import eng_notation
 from gnuradio import soapy
+import decoder as epy_block_0  # embedded python block
 
 
 
@@ -74,10 +71,9 @@ class receiver(gr.top_block):
         self._soapy_rtlsdr_source_0_gain_value = 20
         self.set_soapy_rtlsdr_source_0_gain_mode(0, bool(False))
         self.set_soapy_rtlsdr_source_0_gain(0, 'TUNER', 20)
+        self.epy_block_0 = epy_block_0.blk()
         self.blocks_threshold_ff_0 = blocks.threshold_ff(0.2, 0.04, 0)
         self.blocks_keep_one_in_n_0 = blocks.keep_one_in_n(gr.sizeof_float*1, 20)
-        self.blocks_file_sink_0 = blocks.file_sink(gr.sizeof_float*1, './rfsink', False)
-        self.blocks_file_sink_0.set_unbuffered(True)
         self.blocks_complex_to_mag_squared_0 = blocks.complex_to_mag_squared(1)
 
 
@@ -85,7 +81,7 @@ class receiver(gr.top_block):
         # Connections
         ##################################################
         self.connect((self.blocks_complex_to_mag_squared_0, 0), (self.blocks_threshold_ff_0, 0))
-        self.connect((self.blocks_keep_one_in_n_0, 0), (self.blocks_file_sink_0, 0))
+        self.connect((self.blocks_keep_one_in_n_0, 0), (self.epy_block_0, 0))
         self.connect((self.blocks_threshold_ff_0, 0), (self.blocks_keep_one_in_n_0, 0))
         self.connect((self.soapy_rtlsdr_source_0, 0), (self.blocks_complex_to_mag_squared_0, 0))
 

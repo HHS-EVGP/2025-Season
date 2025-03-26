@@ -1,1 +1,3 @@
-Base Station/receiver/rfsink
+BaseStation/__pycache__/
+BaseStation/receiver.grc
+.vscode/

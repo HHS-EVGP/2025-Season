@@ -1,6 +1,5 @@
 import busio # type: ignore
 import serial # type: ignore
-
 import RPi.GPIO as GPIO  # type: ignore
 from adafruit_ads1x15.analog_in import AnalogIn # type: ignore
 import board # type: ignore
@@ -11,18 +10,15 @@ import math
 import subprocess
 import time
 import logging
+import struct
 
 print("I guess all of the packages loaded! (:")
-
-# Make sure to replace with your schools ID (Whatever you want, just not the same as someone else)
-school_id = "hhs"
 
 # Transmission Variables
 freq = 915 # Frequency in MHz
 Pus = 10 # Duration of a 1 or 0 pulse in µs
 Gus = 0 # Duration of gap between bits in µs
-preamble = "11111111"
-postamble = "10111111"
+preamble = "1" * 128 
 
 #Setup Thermistor Values
 R1 = 10000.0
@@ -53,8 +49,9 @@ A2 = AnalogIn(analogA, ADS.P2) # battTemp1
 A3 = AnalogIn(analogA, ADS.P3) # battTemp2
 B0 = AnalogIn(analogB, ADS.P0) # battTemp3
 B1 = AnalogIn(analogB, ADS.P1) # battTemp4
-B2 = AnalogIn(analogB, ADS.P2) # ****What does this do???****
+#B2 = AnalogIn(analogB, ADS.P2) # Port not used
 B3 = AnalogIn(analogB, ADS.P3) # brake
+
 #Setup UART for Cycle Anyalist
 cycleAnalyst = serial.Serial('/dev/serial0',baudrate=9600)
 #Setup variables
@@ -62,7 +59,7 @@ running = True
 dataR = None
 conter = 0
 
-# Function to write to a specific SC18IM704 UART
+# Function to write to a specific SC18IM704 UART (Used only if needed by user)
 def write_to_uart(device_addr, data):
     try:
         # Command structure: Start ('S'), data, Stop ('P')
@@ -88,30 +85,95 @@ def read_from_uart(device_addr, length=10):
 
 # UART handler for Cycle Analyst
 def UART_CA():
-    # Send output as: "CA,amp_hours,voltage,current,speed,miles|"
+    # Input from CA is: amp_hours|voltage|current|speed|miles 
     try:
         data = read_from_uart(CA704_ADDR, 10)  # Adjust length for Cycle Analyst
         if data:
-            # Process Cycle Analyst data here
-            return f"CA,{data.strip()}|"
+            input = data.strip()
+            amp_hours, voltage, current, speed, miles = input.split('|')
+            return amp_hours, voltage, current, speed, miles
         else:
-            return "CA,None,None,None,None,None|"
+            amp_hours = voltage = current = speed = miles = float('-inf')
+            return  amp_hours, voltage, current, speed, miles
     except Exception as e:
         print(f"Error in UART_CA function: {e}")
-        return "CA,None,None,None,None,None|"
+        return float('-inf')
 
 # UART handler for GPS
+# GPS Variables
+timestamp = None
+pos_status = None
+lat = None
+lat_dir = None
+lon = None
+lon_dir = None
+speed = None
+track_true = None
+date = None
+mag_var = None
+var_dir = None
+mod_ind = None
+checksum = None
+
 def UART_GPS():
+    # The GPS unit returns the same data in varius formats at once (by default)
+    # The $GPRMC scheme containes the most relevant data
+    # $GPRMC documentation: https://docs.novatel.com/OEM7/Content/Logs/GPRMC.htm
     try:
-        data = read_from_uart(GPS704_ADDR, 128)  # GPS data length can be longer
+        data = read_from_uart(GPS704_ADDR, 128)  # GPS data length can be longer (up to 255 bytes)
         if data:
-            # Process GPS NMEA data here
-            return f"GPS,{data.strip()}|"
+
+            input =  data.strip()
+            if "$GPRMC" in input:
+                input = input.split("$GPGGA")[1]
+                input = input.split("\r\n")[0]
+
+                timestamp, pos_status, lat, lat_dir, lon, lon_dir, speed, track_true, date,
+                mag_var, var_dir, mod_ind, checksum = input.split(',')
+                
+                #If no GPS fix, return -inf for all variables
+                if pos_status == 'V':
+                    print("No GPS fix!!!")
+                    GPS_x = GPS_y = GPS_z = float('-inf')
+                    return timestamp, GPS_x, GPS_y, GPS_z
+                
+                # Convert latitude and longitude to decimal degrees
+                lat = float(lat[:2]) + float(lat[2:]) / 60.0
+                if lat_dir == 'S':
+                    lat = -lat
+
+                lon = float(lon[:3]) + float(lon[3:]) / 60.0
+                if lon_dir == 'W':
+                    lon = -lon
+
+                # Convert decimal degrees to radians
+                lat = math.radians(lat)
+                lon = math.radians(lon)
+
+                # The IAU nominal "zero tide" equatorial radius of the Earth
+                R = 6378100
+
+                # Convert to Cartesian coordinates
+                GPS_x = R * math.cos(lat) * math.cos(lon)
+                GPS_y = R * math.cos(lat) * math.sin(lon)
+                GPS_z = R * math.sin(lat)
+
+                return time.time(), GPS_x, GPS_y, GPS_z,
+        
+            else:
+                print("No $GPRMC found")
+                GPS_x = GPS_y = GPS_z = float('-inf')
+                return time.time(), GPS_x, GPS_y, GPS_z # Have to use system time instead of GPS time
+                #return UART_GPS() # Restart the function if $GPRMC is not found
+            
         else:
-            return "GPS,None|"
+            GPS_x = GPS_y = GPS_z = float('-inf')
+            return time.time(), GPS_x, GPS_y, GPS_z
+        
     except Exception as e:
         print(f"Error in UART_GPS function: {e}")
-        return "GPS,None|"
+        GPS_x = GPS_y = GPS_z = float('-inf')
+        return time.time(), GPS_x, GPS_y, GPS_z
 
 def thermistor(idx):
     R2 = R1 * (1023.0 / float(idx) - 1.0)
@@ -122,70 +184,68 @@ def thermistor(idx):
     return T
 
 def analogPull():
-    data = ""
-    temp_data = ""
-
     # Throttle Value
     try:
-        data += f"throttle,{A0.value}|"
+        throttle = A0.value
     except:
-        data += f"throttle,None|"
+        throttle = float('-inf')
 
     # Brake Value
     try:
-        data += f"brake,{B3.value}|"
+        brake = B3.value
     except:
-        data += f"brake,None|"
+        brake = float('-inf')
 
     # Motor Temperature
     try:
-        temp_data += f"{A1.value},"
+        motor_temp = A1.value
     except:
-        temp_data += "None,"
+        motor_temp = float('-inf')
 
     # Battery 1 Temperature
     try:
-        temp_data += f"{thermistor(A2.value)},"
+        batt_1 = thermistor(A2.value)
     except:
-        temp_data += "None,"
+        batt_1 = float('-inf')
 
     # Battery 2 Temperature
     try:
-        temp_data += f"{thermistor(A3.value)},"
+        batt_2 = thermistor(A3.value)
     except:
-        temp_data += "None,"
+        batt_2 = float('-inf')
 
     # Battery 3 Temperature
     try:
-        temp_data += f"{thermistor(B0.value)},"
+        batt_3 = thermistor(B0.value)
     except:
-        temp_data += "None,"
+        batt_3 = float('-inf')
 
     # Battery 4 Temperature
     try: 
-        temp_data += f"{thermistor(B1.value)}"
+        batt_4 = thermistor(B1.value)
     except:
-        temp_data += "None"
+        batt_4 = float('-inf')
 
-    data += f"tempData,{temp_data}|"
-
-    return data
+    return throttle, brake, motor_temp, batt_1, batt_2, batt_3, batt_4
 
 def sendRF(data):
     GPIO.output(sendLED, 1)
-    subprocess.run(["sudo ./sendook -0", Pus, "-1", Pus, "-g", Gus, "-f", freq, "11111111", data, "10111111"]) # 11111111 is the preamble, 10111111 is the postamble
+    subprocess.run(["sudo ./sendook -0", Pus, "-1", Pus, "-g", Gus, "-f", freq, preamble, data])
     print("Sent:", data,)
 
 while running:
+    #Get Data
+    amp_hours, voltage, current, speed, miles = UART_CA()
+    throttle, brake, motor_temp, batt_1, batt_2, batt_3, batt_4 = analogPull()
+    timestamp, GPS_x, GPS_y, GPS_z = UART_GPS()
 
-    data_2_send = f"{school_id}|" 
-    data_2_send += "time"+time.time() # Timestamp
-    data_2_send += analogPull()       # Analog sensor data
-    data_2_send += UART_CA()          # Cycle Analyst data
-    data_2_send += UART_GPS()         # GPS data
+    #Format Data
+    for var in [timestamp, amp_hours, voltage, current, speed, miles, throttle, brake, motor_temp, batt_1, batt_2, batt_3, batt_4, GPS_x, GPS_y, GPS_z]:
+        bin_var = ''.join(f'{byte:08b}' for byte in struct.pack('>d', var)) # Encode float to 1s and 0s (64 bit)
+        data_2_send += str(bin_var)
 
-    bin_2_send = ' '.join(format(ord(char), '08b') for char in data_2_send) #Format strings into binary
-    sendRF(bin_2_send)
+    #Send Data
+    sendRF(data_2_send)
 
     #Log Data
     logging.warning(data_2_send)
