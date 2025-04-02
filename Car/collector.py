@@ -102,7 +102,6 @@ def UART_CA():
         return float('-inf')
 
 # UART handler for GPS
-
 def UART_GPS():
     # The GPS unit returns the same data in varius formats at once (by default)
     # The $GPRMC scheme containes the most relevant data
@@ -243,20 +242,20 @@ def sendRF(data):
     print("Sent:", data,)
 
 while running:
-    #Get Data
+    # Get Data
     amp_hours, voltage, current, speed, miles = UART_CA()
     throttle, brake, motor_temp, batt_1, batt_2, batt_3, batt_4 = analogPull()
     GPS_x, GPS_y, GPS_z = UART_GPS()
 
-    #Format Data
+    # Encode data
     for var in [time.time(), amp_hours, voltage, current, speed, miles, throttle, brake, motor_temp, batt_1, batt_2, batt_3, batt_4, GPS_x, GPS_y, GPS_z]:
-        bin_var = ''.join(f'{byte:08b}' for byte in struct.pack('>d', var)) # Encode float to 1s and 0s (64 bit)
-        data_2_send += str(bin_var)
+        bit_string = ''.join(f'{byte:08b}' for byte in struct.pack('>d', var))
+        data_2_send += bit_string
 
-    #Send Data
+    # Send Data
     sendRF(data_2_send)
 
-    #Log Data
+    # Log Data
     logging.warning(data_2_send)
     GPIO.output(sendLED, 0)
     time.sleep(0.25)
