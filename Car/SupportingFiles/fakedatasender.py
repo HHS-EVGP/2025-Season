@@ -1,6 +1,6 @@
 import struct
 import time
-import datetime
+from datetime import datetime
 import subprocess
 import random
 import sqlite3
