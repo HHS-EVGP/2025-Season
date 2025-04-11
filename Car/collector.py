@@ -15,6 +15,7 @@ import struct
 print("I guess all of the packages loaded! (:")
 
 OnGPStime = False
+data_2_send = ""
 
 # Transmission Variables
 freq = 915 # Frequency in MHz
@@ -238,8 +239,8 @@ def analogPull():
 
 def sendRF(data):
     GPIO.output(sendLED, 1)
-    subprocess.run(["sudo ./sendook -0", Pus, "-1", Pus, "-g", Gus, "-f", freq, preamble, data]) # Uses GPIO 4 (Pin 7)
-    print("Sent:", data,)
+    subprocess.run([f"sudo ./sendook -0 {Pus} -1 {Pus} -g {Gus} -f {freq}M {preamble} {data}"]) # Uses GPIO 4 (Pin 7)
+    print("Sent:", data)
 
 while running:
     # Get Data

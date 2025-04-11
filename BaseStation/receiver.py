@@ -12,7 +12,6 @@ from gnuradio import blocks
 from gnuradio import gr
 import sys
 import signal
-from gnuradio.eng_arg import eng_float, intx
 from gnuradio import soapy
 import decoder as epy_block_0  # embedded python block
 
