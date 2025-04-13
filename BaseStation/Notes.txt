@@ -1,10 +1,6 @@
 User:     "data"
 Password: "evgp"
-hostname: "electric.local"
-
-The Command "node server.js" runs the server, and the csv file(s)
-
-You need node.js setup and installed. Testing used version LTS 20.17.0
+hostname: "data.local"
 
 Software needed:
-    With apt: nodejs, gnuradio
+    With pip: python-cc1101, Flask
