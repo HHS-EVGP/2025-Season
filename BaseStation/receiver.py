@@ -1,140 +1,89 @@
-#!/usr/bin/env python3
-# -*- coding: utf-8 -*-
+import sqlite3
+from datetime import datetime
+import time
+import struct
 
-#
-# SPDX-License-Identifier: GPL-3.0
-#
-# GNU Radio Python Flow Graph
-# Title: EVGP OOK Receiver
-# GNU Radio version: 3.10.9.2
+from cc1101 import CC1101 # type: ignore
+from cc1101.config import RXConfig, Modulation # type: ignore
 
-from gnuradio import blocks
-from gnuradio import gr
-import sys
-import signal
-from gnuradio import soapy
-import decoder as epy_block_0  # embedded python block
+# Transmission variables
+rx_config = RXConfig.new(
+    frequency=915,
+    modulation=Modulation.MSK, # Read up: https://en.wikipedia.org/wiki/Minimum-shift_keying
+    baud_rate=12, # Baud rate in kbps (Currently 3kb for each quarter second packet)
+    sync_word=0xD391, # Unique 16-bit sync word (Happens to be unicode for 펑 :) )
+    preamble_length=4, # Recommended: https://e2e.ti.com/support/wireless-connectivity/sub-1-ghz-group/sub-1-ghz/f/sub-1-ghz-forum/1027627/cc1101-preamble-sync-word-quality
+    packet_length=104, # In Bytes (Number of columns * 8)
+    tx_power=0.1, # dBm
+)
+radio = CC1101("/dev/cc1101.0.0", rx_config, blocking=True) # blocking=True means program will wait for a packet to be received
 
+# Link the database to the python cursor
+con = sqlite3.connect("./EVGPTelemetry.sqlite")
+cur = con.cursor()
 
+# Define the name of today's table
+table_name = "hhs_" + datetime.now().strftime("%Y_%m_%d")
+print("Today's table name is:", table_name)
 
+# If table_name does not exist as a table, create it
+create_table_sql = """
+    CREATE TABLE IF NOT EXISTS {} (
+    time REAL UNIQUE PRIMARY KEY,
+    Throttle REAL,
+    Brake_Pedal REAL,
+    Motor_temp REAL,
+    Battery_1 REAL,
+    Battery_2 REAL,
+    Battery_3 REAL,
+    Battery_4 REAL,
+    ca_AmpHrs REAL,
+    ca_Voltage REAL,
+    ca_Current REAL,
+    ca_Speed REAL,
+    ca_Miles REAL,
+    GPS_X REAL,
+    GPS_Y REAL,
+    GPS_Z REAL
+)""".format(table_name)
 
-class receiver(gr.top_block):
+cur.execute(create_table_sql)
+con.commit()
 
-    def __init__(self):
-        gr.top_block.__init__(self, "EVGP OOK Receiver", catch_exceptions=True)
+while True:
+    IN_data = []
 
-        ##################################################
-        # Variables
-        ##################################################
-        self.samp_rate = samp_rate = 2000000
-        self.lowthreshold = lowthreshold = 0.2
-        self.highthreshold = highthreshold = 0.04
-        self.freq = freq = 915000000
+    # Receive the next packets
+    packets = radio.receive()
+    
+    # Extract the data from the packets
+    for packet in packets:
+        for i in range(0, len(packet), 8):
+            chunk = packet[i:i+8]
+            IN_data.append(struct.unpack('<d', chunk))
 
-        ##################################################
-        # Blocks
-        ##################################################
+    # Assign the extracted data to the respective variables
+    timestamp, throttle, brake_pedal, motor_temp, Battery_temp_1, Battery_temp_2, Battery_temp_3, Battery_temp_4, \
+    amp_hours, voltage, current, speed, miles, GPS_x, GPS_y, GPS_z = IN_data
 
-        self.soapy_rtlsdr_source_0 = None
-        dev = 'driver=rtlsdr'
-        stream_args = 'bufflen=16384'
-        tune_args = ['']
-        settings = ['']
+    # Interpret nan as NULL
+    for var in [throttle, brake_pedal, motor_temp, Battery_temp_1, Battery_temp_2, Battery_temp_3, Battery_temp_4,
+                amp_hours, voltage, current, speed, miles, GPS_x, GPS_y, GPS_z]:
+        if var == float('nan'):
+            var = None
 
-        def _set_soapy_rtlsdr_source_0_gain_mode(channel, agc):
-            self.soapy_rtlsdr_source_0.set_gain_mode(channel, agc)
-            if not agc:
-                  self.soapy_rtlsdr_source_0.set_gain(channel, self._soapy_rtlsdr_source_0_gain_value)
-        self.set_soapy_rtlsdr_source_0_gain_mode = _set_soapy_rtlsdr_source_0_gain_mode
+    # Insert the data into the database
+    insert_data_sql = """
+        INSERT INTO {} (
+            time, Throttle, Brake_Pedal, Motor_temp, Battery_1, Battery_2, Battery_3, Battery_4,
+            ca_AmpHrs, ca_Voltage, ca_Current, ca_Speed, ca_Miles, GPS_X, GPS_Y, GPS_Z
+        ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+        """
 
-        def _set_soapy_rtlsdr_source_0_gain(channel, name, gain):
-            self._soapy_rtlsdr_source_0_gain_value = gain
-            if not self.soapy_rtlsdr_source_0.get_gain_mode(channel):
-                self.soapy_rtlsdr_source_0.set_gain(channel, gain)
-        self.set_soapy_rtlsdr_source_0_gain = _set_soapy_rtlsdr_source_0_gain
+    cur.execute(insert_data_sql, (
+        timestamp, throttle, brake_pedal, motor_temp, Battery_temp_1, Battery_temp_2, Battery_temp_3,
+        Battery_temp_4, amp_hours, voltage, current, speed, miles, GPS_x, GPS_y, GPS_z
+    ))
+    con.commit
 
-        def _set_soapy_rtlsdr_source_0_bias(bias):
-            if 'biastee' in self._soapy_rtlsdr_source_0_setting_keys:
-                self.soapy_rtlsdr_source_0.write_setting('biastee', bias)
-        self.set_soapy_rtlsdr_source_0_bias = _set_soapy_rtlsdr_source_0_bias
-
-        self.soapy_rtlsdr_source_0 = soapy.source(dev, "fc32", 1, '',
-                                  stream_args, tune_args, settings)
-
-        self._soapy_rtlsdr_source_0_setting_keys = [a.key for a in self.soapy_rtlsdr_source_0.get_setting_info()]
-
-        self.soapy_rtlsdr_source_0.set_sample_rate(0, samp_rate)
-        self.soapy_rtlsdr_source_0.set_frequency(0, freq)
-        self.soapy_rtlsdr_source_0.set_frequency_correction(0, 0)
-        self.set_soapy_rtlsdr_source_0_bias(bool(False))
-        self._soapy_rtlsdr_source_0_gain_value = 20
-        self.set_soapy_rtlsdr_source_0_gain_mode(0, bool(False))
-        self.set_soapy_rtlsdr_source_0_gain(0, 'TUNER', 20)
-        self.epy_block_0 = epy_block_0.blk()
-        self.blocks_threshold_ff_0 = blocks.threshold_ff(0.2, 0.04, 0)
-        self.blocks_keep_one_in_n_0 = blocks.keep_one_in_n(gr.sizeof_float*1, 20)
-        self.blocks_complex_to_mag_squared_0 = blocks.complex_to_mag_squared(1)
-
-
-        ##################################################
-        # Connections
-        ##################################################
-        self.connect((self.blocks_complex_to_mag_squared_0, 0), (self.blocks_threshold_ff_0, 0))
-        self.connect((self.blocks_keep_one_in_n_0, 0), (self.epy_block_0, 0))
-        self.connect((self.blocks_threshold_ff_0, 0), (self.blocks_keep_one_in_n_0, 0))
-        self.connect((self.soapy_rtlsdr_source_0, 0), (self.blocks_complex_to_mag_squared_0, 0))
-
-
-    def get_samp_rate(self):
-        return self.samp_rate
-
-    def set_samp_rate(self, samp_rate):
-        self.samp_rate = samp_rate
-        self.soapy_rtlsdr_source_0.set_sample_rate(0, self.samp_rate)
-
-    def get_lowthreshold(self):
-        return self.lowthreshold
-
-    def set_lowthreshold(self, lowthreshold):
-        self.lowthreshold = lowthreshold
-
-    def get_highthreshold(self):
-        return self.highthreshold
-
-    def set_highthreshold(self, highthreshold):
-        self.highthreshold = highthreshold
-
-    def get_freq(self):
-        return self.freq
-
-    def set_freq(self, freq):
-        self.freq = freq
-        self.soapy_rtlsdr_source_0.set_frequency(0, self.freq)
-
-
-
-
-def main(top_block_cls=receiver, options=None):
-    tb = top_block_cls()
-
-    def sig_handler(sig=None, frame=None):
-        tb.stop()
-        tb.wait()
-
-        sys.exit(0)
-
-    signal.signal(signal.SIGINT, sig_handler)
-    signal.signal(signal.SIGTERM, sig_handler)
-
-    tb.start()
-
-    try:
-        input('Press Enter to quit: ')
-    except EOFError:
-        pass
-    tb.stop()
-    tb.wait()
-
-
-if __name__ == '__main__':
-    main()
+    time.sleep(0.1)

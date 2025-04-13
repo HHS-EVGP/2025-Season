@@ -20,13 +20,10 @@ print("I guess all of the packages loaded! (:")
 OnGPStime = False
 data_2_send = ""
 
-# Transmission Variables
-freq = 915 # Frequency in MHz
-
 tx_config = TXConfig.new(
-    frequency=freq,
+    frequency=915,
     modulation=Modulation.MSK, # Read up: https://en.wikipedia.org/wiki/Minimum-shift_keying
-    baud_rate=12.0, # Baud rate in kbps (Currently 3kb for each quarter second packet)
+    baud_rate=12, # Baud rate in kbps (Currently 3kb for each quarter second packet)
     sync_word=0xD391, # Unique 16-bit sync word (Happens to be unicode for 펑 :) )
     preamble_length=4, # Recommended: https://e2e.ti.com/support/wireless-connectivity/sub-1-ghz-group/sub-1-ghz/f/sub-1-ghz-forum/1027627/cc1101-preamble-sync-word-quality
     packet_length=104, # In Bytes (Number of columns * 8)
@@ -68,10 +65,6 @@ B3 = AnalogIn(analogB, ADS.P3) # brake
 
 #Setup UART for Cycle Anyalist
 cycleAnalyst = serial.Serial('/dev/serial0',baudrate=9600)
-#Setup variables
-running = True
-dataR = None
-conter = 0
 
 # Function to write to a specific SC18IM704 UART (Used only if needed by user)
 def write_to_uart(device_addr, data):
@@ -107,11 +100,11 @@ def UART_CA():
             amp_hours, voltage, current, speed, miles = input.split('|')
             return amp_hours, voltage, current, speed, miles
         else:
-            amp_hours = voltage = current = speed = miles = float('-inf')
+            amp_hours = voltage = current = speed = miles = float('nan')
             return  amp_hours, voltage, current, speed, miles
     except Exception as e:
         print(f"Error in UART_CA function: {e}")
-        return float('-inf')
+        return float('nan')
 
 # UART handler for GPS
 def UART_GPS():
@@ -130,10 +123,10 @@ def UART_GPS():
                 timestamp, pos_status, lat, lat_dir, lon, lon_dir, speed, track_true, date, \
                 mag_var, var_dir, mod_ind, checksum = input.split(',')
 
-                #If no GPS fix, return -inf for all variables
+                #If no GPS fix, return nan for all variables
                 if pos_status == 'V':
                     print("No GPS fix!!!")
-                    GPS_x = GPS_y = GPS_z = float('-inf')
+                    GPS_x = GPS_y = GPS_z = float('nan')
                     return GPS_x, GPS_y, GPS_z
                 
                 # Set System time to gps time if not done yet
@@ -182,17 +175,17 @@ def UART_GPS():
         
             else:
                 print("No $GPRMC found")
-                GPS_x = GPS_y = GPS_z = float('-inf')
+                GPS_x = GPS_y = GPS_z = float('nan')
                 return GPS_x, GPS_y, GPS_z # Have to use system time instead of GPS time
                 #return UART_GPS() # Restart the function
             
         else:
-            GPS_x = GPS_y = GPS_z = float('-inf')
+            GPS_x = GPS_y = GPS_z = float('nan')
             return GPS_x, GPS_y, GPS_z
         
     except Exception as e:
         print(f"Error in UART_GPS function: {e}")
-        GPS_x = GPS_y = GPS_z = float('-inf')
+        GPS_x = GPS_y = GPS_z = float('nan')
         return time.time(), GPS_x, GPS_y, GPS_z
 
 def thermistor(idx):
@@ -208,47 +201,47 @@ def analogPull():
     try:
         throttle = A0.value
     except:
-        throttle = float('-inf')
+        throttle = float('nan')
 
     # Brake Value
     try:
         brake = B3.value
     except:
-        brake = float('-inf')
+        brake = float('nan')
 
     # Motor Temperature
     try:
         motor_temp = A1.value
     except:
-        motor_temp = float('-inf')
+        motor_temp = float('nan')
 
     # Battery 1 Temperature
     try:
         batt_1 = thermistor(A2.value)
     except:
-        batt_1 = float('-inf')
+        batt_1 = float('nan')
 
     # Battery 2 Temperature
     try:
         batt_2 = thermistor(A3.value)
     except:
-        batt_2 = float('-inf')
+        batt_2 = float('nan')
 
     # Battery 3 Temperature
     try:
         batt_3 = thermistor(B0.value)
     except:
-        batt_3 = float('-inf')
+        batt_3 = float('nan')
 
     # Battery 4 Temperature
     try: 
         batt_4 = thermistor(B1.value)
     except:
-        batt_4 = float('-inf')
+        batt_4 = float('nan')
 
     return throttle, brake, motor_temp, batt_1, batt_2, batt_3, batt_4
 
-while running:
+while True:
     # Get Data
     data_2_send = b''
     
