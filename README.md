@@ -38,3 +38,25 @@ The basic structure of the system is as follows:
 ### Acknowledgements
 
 *This project is licensed under the MIT License.*
+
+### Notes about new protocol (rough)
+
+New protocol using CC1101
+
+Car: CC1101 Unit and https://pypi.org/project/cc1101-python/
+
+Station:
+
+FT232H Adapter
+https://ftdichip.com/wp-content/uploads/2020/07/DS_FT232H.pdf
+
+https://www.amazon.com/KOOBOOK-FT232H-High-Speed-Multifunction-Module/dp/B07T9CPMHT/ref=dp_fod_d_sccl_1/141-4031877-3157017
+
+Library :https://pypi.org/project/pyftdi/
+
+CC1101
+https://pypi.org/project/cc1101-python/
+
+CC1101 Unit and https://pypi.org/project/cc1101/
+
+CC1101 Datasheet: https://www.ti.com/lit/ds/symlink/cc1101.pdf

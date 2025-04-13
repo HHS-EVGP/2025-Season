@@ -6,6 +6,9 @@ import board # type: ignore
 from adafruit_lsm6ds.lsm6dsox import LSM6DSOX # type: ignore
 from adafruit_ads1x15.ads1115 import ADS # type: ignore
 
+from cc1101 import CC1101 # type: ignore
+from cc1101.config import TXConfig, Modulation # type: ignore
+
 import math
 import subprocess
 import time
@@ -19,9 +22,17 @@ data_2_send = ""
 
 # Transmission Variables
 freq = 915 # Frequency in MHz
-Pus = 10 # Duration of a 1 or 0 pulse in µs
-Gus = 0 # Duration of gap between bits in µs
-preamble = "1" * 128 
+
+tx_config = TXConfig.new(
+    frequency=freq,
+    modulation=Modulation.MSK, # Read up: https://en.wikipedia.org/wiki/Minimum-shift_keying
+    baud_rate=12.0, # Baud rate in kbps (Currently 3kb for each quarter second packet)
+    sync_word=0xD391, # Unique 16-bit sync word (Happens to be unicode for 펑 :) )
+    preamble_length=4, # Recommended: https://e2e.ti.com/support/wireless-connectivity/sub-1-ghz-group/sub-1-ghz/f/sub-1-ghz-forum/1027627/cc1101-preamble-sync-word-quality
+    packet_length=104, # In Bytes (Number of columns * 8)
+    tx_power=0.1, # dBm
+)
+radio = CC1101("/dev/cc1101.0.0") # The default device path
 
 #Setup Thermistor Values
 R1 = 10000.0
@@ -237,24 +248,23 @@ def analogPull():
 
     return throttle, brake, motor_temp, batt_1, batt_2, batt_3, batt_4
 
-def sendRF(data):
-    GPIO.output(sendLED, 1)
-    subprocess.run([f"sudo ./sendook -0 {Pus} -1 {Pus} -g {Gus} -f {freq}M {preamble} {data}"]) # Uses GPIO 4 (Pin 7)
-    print("Sent:", data)
-
 while running:
     # Get Data
+    data_2_send = b''
+    
+    timestamp = time.time()
     amp_hours, voltage, current, speed, miles = UART_CA()
     throttle, brake, motor_temp, batt_1, batt_2, batt_3, batt_4 = analogPull()
     GPS_x, GPS_y, GPS_z = UART_GPS()
 
-    # Encode data
-    for var in [time.time(), amp_hours, voltage, current, speed, miles, throttle, brake, motor_temp, batt_1, batt_2, batt_3, batt_4, GPS_x, GPS_y, GPS_z]:
-        bit_string = ''.join(f'{byte:08b}' for byte in struct.pack('>d', var))
-        data_2_send += bit_string
+    # Encode Data
+    for var in timestamp, amp_hours, voltage, current, speed, miles, throttle, brake, motor_temp, batt_1, batt_2, batt_3, batt_4:
+        data_2_send + struct.pack('<d', var)
 
     # Send Data
-    sendRF(data_2_send)
+    GPIO.output(sendLED, 1)
+    radio.transmit(tx_config, data_2_send)
+    print("Packet sent")
 
     # Log Data
     logging.warning(data_2_send)

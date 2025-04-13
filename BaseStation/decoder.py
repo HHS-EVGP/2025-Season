@@ -73,7 +73,6 @@ class blk(gr.sync_block):
                 # If the packet is complete, log it
                 else:
                     # Trim down the input dump to i
-                    
                     packet = input_dump[len(preamble) :len(preamble) + packet_length]                    
                     break
 

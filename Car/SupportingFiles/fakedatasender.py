@@ -1,17 +1,26 @@
 import struct
 import time
 from datetime import datetime
-import subprocess
 import random
 import sqlite3
 
 freq = 915 # Frequency in MHz
-Pus = 10 # Duration of a 1 or 0 pulse in µs
-Gus = 0 # Duration of gap between bits in µs
-preamble = "1" * 128 
+from cc1101 import CC1101 # type: ignore
+from cc1101.config import TXConfig, Modulation # type: ignore
 
-# Start Transmission to read form /tmp/fifo
-subprocess.run(f"sudo /home/car/sendook -0 {Pus} -1 {Pus} -g {Gus} -p 0 -f {freq}M -r 1 -i /tmp/fifo", shell=True) # Uses GPIO 4 (Pin 7) # Uses GPIO 4 (Pin 7)
+# Transmission Variables
+freq = 915 # Frequency in MHz
+
+tx_config = TXConfig.new(
+    frequency=freq,
+    modulation=Modulation.MSK, # Read up: https://en.wikipedia.org/wiki/Minimum-shift_keying
+    baud_rate=12.0, # Baud rate in kbps (Currently 3kb for each quarter second packet)
+    sync_word=0xD391, # Unique 16-bit sync word (Happens to be unicode for 펑 :) )
+    preamble_length=4, # Recommended: https://e2e.ti.com/support/wireless-connectivity/sub-1-ghz-group/sub-1-ghz/f/sub-1-ghz-forum/1027627/cc1101-preamble-sync-word-quality
+    packet_length=104, # In Bytes (Number of columns * 8)
+    tx_power=0.1, # dBm (see: https://www.ti.com/lit/an/swra151a/swra151a.pdf)
+)
+radio = CC1101("/dev/cc1101.0.0") # The default device path
 
 # Set Up a database to compare to the received database
 con = sqlite3.connect("./fakedatalog.sqlite")
@@ -45,36 +54,33 @@ create_table_sql = """
 cur.execute(create_table_sql)
 con.commit()
 
-# Generate fake data
-timestamp = time.time()
-amp_hours = random.uniform(-300, 300)
-voltage = random.uniform(-300, 300)
-current = random.uniform(-300, 300)
-speed = random.uniform(-300, 300)
-miles = random.uniform(-300, 300)
-throttle = random.uniform(-300, 300)
-brake = random.uniform(-300, 300)
-motor_temp = random.uniform(-300, 300)
-batt_1 = random.uniform(-300, 300)
-batt_2 = random.uniform(-300, 300)
-batt_3 = random.uniform(-300, 300)
-batt_4 = random.uniform(-300, 300)
-GPS_x = random.uniform(-300, 300)
-GPS_y = random.uniform(-300, 300)
-GPS_z = random.uniform(-300, 300)
-
-# Encode data
-data_2_send = ""
-for var in [timestamp, amp_hours, voltage, current, speed, miles, throttle, brake, motor_temp, batt_1, batt_2, batt_3, batt_4, GPS_x, GPS_y, GPS_z]:
-    bit_string = ''.join(f'{byte:08b}' for byte in struct.pack('>d', var))
-    data_2_send += bit_string
-
 while True:
+    data_2_send = b''
+
+    # Generate fake data
     timestamp = time.time()
-    # Send data by adding it to /tmp/fifo
-    with open("/tmp/fifo", "w") as fifo:
-        fifo.write(data_2_send)
-    print("Sent:", len(data_2_send), "bits")
+    amp_hours = random.uniform(-300, 300)
+    voltage = random.uniform(-300, 300)
+    current = random.uniform(-300, 300)
+    speed = random.uniform(-300, 300)
+    miles = random.uniform(-300, 300)
+    throttle = random.uniform(-300, 300)
+    brake = random.uniform(-300, 300)
+    motor_temp = random.uniform(-300, 300)
+    batt_1 = random.uniform(-300, 300)
+    batt_2 = random.uniform(-300, 300)
+    batt_3 = random.uniform(-300, 300)
+    batt_4 = random.uniform(-300, 300)
+    GPS_x = random.uniform(-300, 300)
+    GPS_y = random.uniform(-300, 300)
+    GPS_z = random.uniform(-300, 300)
+
+    # Encode data
+    for var in timestamp, amp_hours, voltage, current, speed, miles, throttle, brake, motor_temp, batt_1, batt_2, batt_3, batt_4:
+        data_2_send + struct.pack('<d', var)
+
+    radio.transmit(tx_config, data_2_send)
+    print("Packet sent")
         
     # Insert data into the database
     insert_data_sql = """
@@ -90,4 +96,4 @@ while True:
     ))
     con.commit()
 
-    #time.sleep(0.25)
+    time.sleep(0.25)
