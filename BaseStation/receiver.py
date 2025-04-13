@@ -61,7 +61,7 @@ while True:
     for packet in packets:
         for i in range(0, len(packet), 8):
             chunk = packet[i:i+8]
-            IN_data.append(struct.unpack('<d', chunk))
+            IN_data.append(struct.unpack('<d', chunk))[0]
 
     # Assign the extracted data to the respective variables
     timestamp, throttle, brake_pedal, motor_temp, Battery_temp_1, Battery_temp_2, Battery_temp_3, Battery_temp_4, \
