@@ -28,6 +28,7 @@ tx_config = TXConfig.new(
     preamble_length=4, # Recommended: https://e2e.ti.com/support/wireless-connectivity/sub-1-ghz-group/sub-1-ghz/f/sub-1-ghz-forum/1027627/cc1101-preamble-sync-word-quality
     packet_length=104, # In Bytes (Number of columns * 8)
     tx_power=0.1, # dBm
+    crc = True, # Enable a checksum
 )
 radio = CC1101("/dev/cc1101.0.0") # The default device path
 
