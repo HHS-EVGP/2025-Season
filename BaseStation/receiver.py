@@ -20,7 +20,7 @@ rx_config = RXConfig.new(
 radio = CC1101("/dev/cc1101.0.0", rx_config, blocking=True) # blocking=True means program will wait for a packet to be received
 
 # Link the database to the python cursor
-con = sqlite3.connect("./EVGPTelemetry.sqlite")
+con = sqlite3.connect("BaseStation/EVGPTelemetry.sqlite")
 cur = con.cursor()
 
 # Define the name of today's table
@@ -61,14 +61,14 @@ while True:
     for packet in packets:
         for i in range(0, len(packet), 8):
             chunk = packet[i:i+8]
-            IN_data.append(struct.unpack('<d', chunk))[0]
+            IN_data.append(struct.unpack('<d', chunk)[0])
 
     # Assign the extracted data to the respective variables
-    timestamp, throttle, brake_pedal, motor_temp, Battery_temp_1, Battery_temp_2, Battery_temp_3, Battery_temp_4, \
+    timestamp, throttle, brake_pedal, motor_temp, batt_1, batt_2, batt_3, batt_4, \
     amp_hours, voltage, current, speed, miles, GPS_x, GPS_y, GPS_z = IN_data
 
     # Interpret nan as NULL
-    for var in [throttle, brake_pedal, motor_temp, Battery_temp_1, Battery_temp_2, Battery_temp_3, Battery_temp_4,
+    for var in [throttle, brake_pedal, motor_temp, batt_1, batt_2, batt_3, batt_4,
                 amp_hours, voltage, current, speed, miles, GPS_x, GPS_y, GPS_z]:
         if var == float('nan'):
             var = None
@@ -82,8 +82,8 @@ while True:
         """
 
     cur.execute(insert_data_sql, (
-        timestamp, throttle, brake_pedal, motor_temp, Battery_temp_1, Battery_temp_2, Battery_temp_3,
-        Battery_temp_4, amp_hours, voltage, current, speed, miles, GPS_x, GPS_y, GPS_z
+        timestamp, throttle, brake_pedal, motor_temp, batt_1, batt_2, batt_3,
+        batt_4, amp_hours, voltage, current, speed, miles, GPS_x, GPS_y, GPS_z
     ))
     con.commit
 

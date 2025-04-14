@@ -1,0 +1,51 @@
+<!DOCTYPE html>
+<html>
+
+<head>
+    <script>
+        setInterval(() => {
+            fetch('/')
+                .then(response => response.json())
+                .then(data => {
+                    document.querySelector('p:nth-of-type(1)').textContent = `Time: ${data.timestamp}`;
+                    document.querySelector('p:nth-of-type(2)').textContent = `Throttle: ${data.throttle}`;
+                    document.querySelector('p:nth-of-type(3)').textContent = `Brake: ${data.brake_pedal}`;
+                    document.querySelector('p:nth-of-type(4)').textContent = `Motor Temp: ${data.motor_temp}`;
+                    document.querySelector('p:nth-of-type(5)').textContent = `Battery Temp 1: ${data.Battery_temp_1}`;
+                    document.querySelector('p:nth-of-type(6)').textContent = `Battery Temp 2: ${data.Battery_temp_2}`;
+                    document.querySelector('p:nth-of-type(7)').textContent = `Battery Temp 3: ${data.Battery_temp_3}`;
+                    document.querySelector('p:nth-of-type(8)').textContent = `Battery Temp 4: ${data.Battery_temp_4}`;
+                    document.querySelector('p:nth-of-type(9)').textContent = `Amp Hours: ${data.amp_hours}`;
+                    document.querySelector('p:nth-of-type(10)').textContent = `Voltage: ${data.voltage}`;
+                    document.querySelector('p:nth-of-type(11)').textContent = `Current: ${data.current}`;
+                    document.querySelector('p:nth-of-type(12)').textContent = `Speed: ${data.speed}`;
+                    document.querySelector('p:nth-of-type(13)').textContent = `Miles: ${data.miles}`;
+                    document.querySelector('p:nth-of-type(14)').textContent = `GPS X: ${data.GPS_x}`;
+                    document.querySelector('p:nth-of-type(15)').textContent = `GPS Y: ${data.GPS_y}`;
+                    document.querySelector('p:nth-of-type(16)').textContent = `GPS Z: ${data.GPS_z}`;
+                })
+                .catch(error => console.error('Error fetching data:', error));
+        }, 250); // Update every 250 milliseconds
+    </script>
+<body>
+    <h1 style="text-align: center;">HHS Live Data</h1>
+    <p>Time: {{ timestamp }}</p>
+    <p>Throttle: {{ throttle }}</p>
+    <p>Brake: {{ brake_pedal }}</p>
+    <p>Motor Temp: {{ motor_temp }}</p>
+    <p>Battery Temp 1: {{ Battery_temp_1 }}</p>
+    <p>Battery Temp 2: {{ Battery_temp_2 }}</p>
+    <p>Battery Temp 3: {{ Battery_temp_3 }}</p>
+    <p>Battery Temp 4: {{ Battery_temp_4 }}</p>
+    <p>Amp Hours: {{ amp_hours }}</p>
+    <p>Voltage: {{ voltage }}</p>
+    <p>Current: {{ current }}</p>
+    <p>Speed: {{ speed }}</p>
+    <p>Miles: {{ miles }}</p>
+    <p>GPS X: {{ GPS_x }}</p>
+    <p>GPS Y: {{ GPS_y }}</p>
+    <p>GPS Z: {{ GPS_z }}</p>
+</body>
+</head>
+
+</html>
