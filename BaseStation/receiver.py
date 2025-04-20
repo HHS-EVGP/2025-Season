@@ -13,7 +13,7 @@ rx_config = RXConfig.new(
     baud_rate=12, # Baud rate in kbps (Currently 3kb for each quarter second packet)
     sync_word=0xD391, # Unique 16-bit sync word (Happens to be unicode for 펑 :) )
     preamble_length=4, # Recommended: https://e2e.ti.com/support/wireless-connectivity/sub-1-ghz-group/sub-1-ghz/f/sub-1-ghz-forum/1027627/cc1101-preamble-sync-word-quality
-    packet_length=104, # In Bytes (Number of columns * 8)
+    packet_length=120, # In Bytes (Number of columns * 8)
     tx_power=0.1, # dBm
     crc=True, # Enable a chwecksum
 )
@@ -44,8 +44,7 @@ create_table_sql = """
     ca_Speed REAL,
     ca_Miles REAL,
     GPS_X REAL,
-    GPS_Y REAL,
-    GPS_Z REAL
+    GPS_Y REAL
 )""".format(table_name)
 
 cur.execute(create_table_sql)
@@ -56,7 +55,7 @@ while True:
 
     # Receive the next packets
     packets = radio.receive() # Packets are only received if they pass the checksum
-    
+
     # Extract the data from the packets
     for packet in packets:
         for i in range(0, len(packet), 8):
@@ -65,11 +64,11 @@ while True:
 
     # Assign the extracted data to the respective variables
     timestamp, throttle, brake_pedal, motor_temp, batt_1, batt_2, batt_3, batt_4, \
-    amp_hours, voltage, current, speed, miles, GPS_x, GPS_y, GPS_z = IN_data
+    amp_hours, voltage, current, speed, miles, GPS_x, GPS_y = IN_data
 
     # Interpret nan as NULL
     for var in [throttle, brake_pedal, motor_temp, batt_1, batt_2, batt_3, batt_4,
-                amp_hours, voltage, current, speed, miles, GPS_x, GPS_y, GPS_z]:
+                amp_hours, voltage, current, speed, miles, GPS_x, GPS_y]:
         if var == float('nan'):
             var = None
 
@@ -77,14 +76,12 @@ while True:
     insert_data_sql = """
         INSERT INTO {} (
             time, Throttle, Brake_Pedal, Motor_temp, Battery_1, Battery_2, Battery_3, Battery_4,
-            ca_AmpHrs, ca_Voltage, ca_Current, ca_Speed, ca_Miles, GPS_X, GPS_Y, GPS_Z
-        ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+            ca_AmpHrs, ca_Voltage, ca_Current, ca_Speed, ca_Miles, GPS_X, GPS_Y
+        ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
         """
 
     cur.execute(insert_data_sql, (
         timestamp, throttle, brake_pedal, motor_temp, batt_1, batt_2, batt_3,
-        batt_4, amp_hours, voltage, current, speed, miles, GPS_x, GPS_y, GPS_z
+        batt_4, amp_hours, voltage, current, speed, miles, GPS_x, GPS_y
     ))
     con.commit
-
-    time.sleep(0.1)

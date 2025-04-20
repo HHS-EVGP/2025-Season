@@ -18,7 +18,6 @@ import struct
 print("I guess all of the packages loaded! (:")
 
 OnGPStime = False
-data_2_send = ""
 
 tx_config = TXConfig.new(
     frequency=915,
@@ -26,7 +25,7 @@ tx_config = TXConfig.new(
     baud_rate=12, # Baud rate in kbps (Currently 3kb for each quarter second packet)
     sync_word=0xD391, # Unique 16-bit sync word (Happens to be unicode for 펑 :) )
     preamble_length=4, # Recommended: https://e2e.ti.com/support/wireless-connectivity/sub-1-ghz-group/sub-1-ghz/f/sub-1-ghz-forum/1027627/cc1101-preamble-sync-word-quality
-    packet_length=104, # In Bytes (Number of columns * 8)
+    packet_length=120, # In Bytes (Number of columns * 8)
     tx_power=0.1, # dBm
     crc = True, # Enable a checksum
 )
@@ -93,7 +92,7 @@ def read_from_uart(device_addr, length=10):
 
 # UART handler for Cycle Analyst
 def UART_CA():
-    # Input from CA is: amp_hours|voltage|current|speed|miles 
+    # Input from CA is: amp_hours|voltage|current|speed|miles
     try:
         data = read_from_uart(CA704_ADDR, 10)  # Adjust length for Cycle Analyst
         if data:
@@ -127,9 +126,9 @@ def UART_GPS():
                 #If no GPS fix, return nan for all variables
                 if pos_status == 'V':
                     print("No GPS fix!!!")
-                    GPS_x = GPS_y = GPS_z = float('nan')
-                    return GPS_x, GPS_y, GPS_z
-                
+                    GPS_x = GPS_y = float('nan')
+                    return GPS_x, GPS_y
+
                 # Set System time to gps time if not done yet
                 if OnGPStime == False:
                     # Extract hours, minutes, and seconds from timestamp
@@ -150,7 +149,7 @@ def UART_GPS():
                     print("System time sucessfully set to GPS time:", formatted_time)
 
                     OnGPStime = True
-                
+
                 # Convert latitude and longitude to decimal degrees
                 lat = float(lat[:2]) + float(lat[2:]) / 60.0
                 if lat_dir == 'S':
@@ -170,24 +169,23 @@ def UART_GPS():
                 # Convert to Cartesian coordinates
                 GPS_x = R * math.cos(lat) * math.cos(lon)
                 GPS_y = R * math.cos(lat) * math.sin(lon)
-                GPS_z = R * math.sin(lat)
 
-                return GPS_x, GPS_y, GPS_z,
-        
+                return GPS_x, GPS_y,
+
             else:
                 print("No $GPRMC found")
-                GPS_x = GPS_y = GPS_z = float('nan')
-                return GPS_x, GPS_y, GPS_z # Have to use system time instead of GPS time
+                GPS_x = GPS_y = float('nan')
+                return GPS_x, GPS_y
                 #return UART_GPS() # Restart the function
-            
+
         else:
-            GPS_x = GPS_y = GPS_z = float('nan')
-            return GPS_x, GPS_y, GPS_z
-        
+            GPS_x = GPS_y = float('nan')
+            return GPS_x, GPS_y
+
     except Exception as e:
         print(f"Error in UART_GPS function: {e}")
-        GPS_x = GPS_y = GPS_z = float('nan')
-        return time.time(), GPS_x, GPS_y, GPS_z
+        GPS_x = GPS_y = float('nan')
+        return time.time(), GPS_x, GPS_y
 
 def thermistor(idx):
     R2 = R1 * (1023.0 / float(idx) - 1.0)
@@ -235,7 +233,7 @@ def analogPull():
         batt_3 = float('nan')
 
     # Battery 4 Temperature
-    try: 
+    try:
         batt_4 = thermistor(B1.value)
     except:
         batt_4 = float('nan')
@@ -245,14 +243,14 @@ def analogPull():
 while True:
     # Get Data
     data_2_send = b''
-    
+
     timestamp = time.time()
     amp_hours, voltage, current, speed, miles = UART_CA()
     throttle, brake, motor_temp, batt_1, batt_2, batt_3, batt_4 = analogPull()
-    GPS_x, GPS_y, GPS_z = UART_GPS()
+    GPS_x, GPS_y = UART_GPS()
 
     # Encode Data
-    for var in timestamp, amp_hours, voltage, current, speed, miles, throttle, brake, motor_temp, batt_1, batt_2, batt_3, batt_4:
+    for var in timestamp, amp_hours, voltage, current, speed, miles, throttle, brake, motor_temp, batt_1, batt_2, batt_3, batt_4, GPS_x, GPS_y:
         data_2_send + struct.pack('<d', var)
 
     # Send Data
