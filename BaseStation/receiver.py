@@ -1,6 +1,5 @@
 import sqlite3
 from datetime import datetime
-import time
 import struct
 
 from cc1101 import CC1101 # type: ignore
@@ -15,7 +14,7 @@ rx_config = RXConfig.new(
     preamble_length=4, # Recommended: https://e2e.ti.com/support/wireless-connectivity/sub-1-ghz-group/sub-1-ghz/f/sub-1-ghz-forum/1027627/cc1101-preamble-sync-word-quality
     packet_length=120, # In Bytes (Number of columns * 8)
     tx_power=0.1, # dBm
-    crc=True, # Enable a chwecksum
+    crc=True, # Enable a checksum
 )
 radio = CC1101("/dev/cc1101.0.0", rx_config, blocking=True) # blocking=True means program will wait for a packet to be received
 
@@ -44,7 +43,8 @@ create_table_sql = """
     ca_Speed REAL,
     ca_Miles REAL,
     GPS_X REAL,
-    GPS_Y REAL
+    GPS_Y REAL,
+    laps NUMERIC
 )""".format(table_name)
 
 cur.execute(create_table_sql)

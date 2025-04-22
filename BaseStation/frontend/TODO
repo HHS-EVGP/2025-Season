@@ -1,0 +1,8 @@
+What still needs to be done for fronted
+    - Set up socket instead of querying the datatabase constantly
+    - Calculate optimal lap time and laply amp hour budget (requires figuring out target lap number)
+    - Add boostrap modals and acces code to lap controls
+
+    - Icon on latest data point for gps scatter plot?
+
+    - Make the map and debug pages (Probably won't happen till next season)
