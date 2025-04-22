@@ -15,7 +15,7 @@ app.config['prevlaptimes'] = []
 
 app.config['maxgpspoints'] = 300
 app.config['racing'] = False
-app.config['whenracestarted'] = 0
+app.config['whenracestarted'] = None
 
 con = sqlite3.connect("BaseStation/EVGPTelemetry.sqlite")
 cur = con.cursor()
@@ -45,7 +45,7 @@ def getdata():
     else:
         timestamp, throttle, brake_pedal, motor_temp, batt_1, batt_2, batt_3, batt_4, \
         amp_hours, voltage, current, speed, miles, GPS_x, GPS_y = data
-        
+
         # If racing, insert the current lap count into the database
         if app.config['racing'] == True:
             con.execute("INSERT INTO {} (timestamp, laps) VALUES (?, ?)".format(app.config['table_name']), (timestamp, app.config['laps']))
@@ -92,7 +92,7 @@ def usrauth():
             app.config['authedusrs'].append(request.remote_addr)
 
         return ('', 200)
-    
+
     else:
         return 'Invalid authentication code', 401
 
@@ -139,8 +139,13 @@ def usrupdate():
             elif command == 'togglerace':
                 if app.config['racing'] == True:
                     app.config['racing'] = False
+
+                    # Reset to default values
                     app.config['laps'] = 0
                     app.config['laptime'] = None
+                    app.config['prevlaptimes'] = []
+                    app.config['targetlaptime'] = None
+                    app.config['whenracestarted'] = None
 
                     return ('', 200)
 
@@ -152,7 +157,7 @@ def usrupdate():
 
             else:
                 return 'Invalid variable update command', 400
-    
+
         else:
             return 'No variable update commmand', 400
     else:
