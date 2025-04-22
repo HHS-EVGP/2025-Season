@@ -30,7 +30,7 @@
           <p>Timestamp: <span class="data" id="timestamp"></span></p>
 
           <div>
-            <canvas id="throttleBrakeChart" width="100%" height="30%"></canvas>
+            <canvas id="throttleBrakeChart" width="100%" height="150%"></canvas>
           </div>
           <br>
 
@@ -38,7 +38,7 @@
 
         <div class="block halfblk d-flex flex-column justify-content-center" style="margin-top: 1em;">
 
-          <p class="heading">Tempratures</p>
+          <p class="heading">Temperatures</p>
           <p>Motor: <span class="data" id="motor_temp"></span>°f</p>
           <p>Battery 1: <span class="data" id="batt_1"></span>°f</p>
           <p>Battery 2: <span class="data" id="batt_2"></span>°f</p>
@@ -87,10 +87,49 @@
 
         <div>
           <!--This specific width and heigt give its collum about the same height as the center column-->
-          <canvas id="gpsplot" width="100%" height="75%"></canvas>
+          <canvas id="gpsplot" width="100%" height="300%"></canvas>
         </div>
 
+        <!--Button to authenticate lap controls-->
         <span>
+          <button id="authlapcontrols" data-bs-toggle="modal" data-bs-target="#lapauthmodal">Enter access code for lap
+            controls</button>
+        </span>
+
+        <!--Modal to authenticate lap controls-->
+        <div class="modal fade" id="lapauthmodal" tabindex="-1" aria-labelledby="exampleModalLabel" aria-hidden="true">
+          <div class="modal-dialog">
+            <div class="modal-content bg-dark text-white">
+              <div class="modal-header border-secondary">
+                <h1 class="modal-title fs-5" id="exampleModalLabel">Enable lap controls?</h1>
+                <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"
+                  aria-label="Cancel"></button>
+              </div>
+              <div class="modal-body text-start">
+                The number of laps and lap time are stored on the server, and are visible to everyone, but can be
+                changed by
+                you if you
+                authenticate. <br><br>
+                Be sure to designate one person per team to be in charge of counting laps, as the lap information is
+                synced across all devices.
+                <br><br>
+                <form id="lapAuthForm" onsubmit="authenticateLapControls(code); return false;">
+                  <label for="accessCode">Enter Access Code:</label>
+                  <input type="text" id="accessCode" name="accessCode" required oninput="code = this.value"
+                    class="form-control bg-dark text-white border-secondary">
+                    <div style="color: red;" id="autherror">Incorrect Access Code</div>
+              </div>
+              <div class="modal-footer border-secondary">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+                <button type="submit" data-bs-dismiss="modal" class="btn btn-primary">Authenticate</button>
+                </form>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!--Lap controls to be shown when acess code entered-->
+        <span id="lapcontrols">
           <button onclick="updateServerVariable('lap-')">Lap-</button>
           <button onclick="updateServerVariable('lap+')">Lap+</button>
           <button id="racing" onclick="updateServerVariable('togglerace')">Start Race</button>

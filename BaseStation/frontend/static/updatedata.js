@@ -26,6 +26,7 @@ function startCharts() {
           }]
         },
         options: {
+          maintainAspectRatio: false,
           animation: false,
           indexAxis: 'y',
           plugins: {
@@ -62,6 +63,7 @@ function startCharts() {
           }]
         },
         options: {
+          maintainAspectRatio: false,
           plugins: {
             legend: {
               display: false,
@@ -71,6 +73,28 @@ function startCharts() {
         }
       });
     });
+}
+
+// Authenticate lap controls
+function authenticateLapControls(code) {
+  fetch('/usrauth', {
+    method: 'POST',
+    body: code,
+  })
+
+  .then(response => {
+    if (response.status == 200) {
+      document.getElementById('lapcontrols').style.display = 'block';
+      document.getElementById('authlapcontrols').style.display = 'none';
+    }
+    else if (response.status == 401) {
+      new bootstrap.Modal(document.getElementById('lapauthmodal')).show();
+      document.getElementById('autherror').style.display = 'block';
+    }
+    else {
+      console.error('Unknown Auth Error:', response);
+    }
+  });
 }
 
 // Update a variable on the server
@@ -151,3 +175,9 @@ setInterval(updateData, 250); // Update every 250ms
 // Call startCharts on window load and resize
 window.addEventListener('load', startCharts);
 window.addEventListener('resize', startCharts);
+
+// Hide lap controls by default
+document.addEventListener('DOMContentLoaded', () => {
+  document.getElementById('lapcontrols').style.display = 'none';
+  document.getElementById('autherror').style.display = 'none';
+});

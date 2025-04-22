@@ -6,9 +6,11 @@ from datetime import datetime
 app = Flask(__name__)
 
 # Global variables
+app.config['authedusrs'] = []
+
 app.config['laps'] = 0
-app.config['laptime'] = 0
-app.config['targetlaptime'] = 0
+app.config['laptime'] = None
+app.config['targetlaptime'] = None
 app.config['prevlaptimes'] = []
 
 app.config['maxgpspoints'] = 300
@@ -79,62 +81,82 @@ def getdata():
         racing=app.config['racing']
     )
 
+# Respond to an authentication attempt
+@app.route("/usrauth", methods=['POST'])
+def usrauth():
+    authcode = "hhsevgp" # Make this whatever you like
+    authattempt = request.get_data(as_text=True)
+
+    if authattempt == authcode:
+        if request.remote_addr not in app.config['authedusrs']:
+            app.config['authedusrs'].append(request.remote_addr)
+
+        return ('', 200)
+    
+    else:
+        return 'Invalid authentication code', 401
+
 # Respond to an updated variable
 @app.route("/usrupdate", methods=['POST'])
 def usrupdate():
-    command = request.get_data(as_text=True)
-    if command:
+    # Check if the user is authenticated
+    if request.remote_addr in app.config['authedusrs']:
+        command = request.get_data(as_text=True)
 
-        if command == 'lap+':
-            if app.config['racing'] == True:
-                # Calculate exact lap time
-                app.config['laptime'] = time.time() - app.config['whenracestarted'] - sum(app.config['prevlaptimes'])
+        if command:
 
-                app.config['laps'] += 1
-                app.config['prevlaptimes'].append(app.config['laptime'])
-                app.config['laptime'] = 0
+            if command == 'lap+':
+                if app.config['racing'] == True:
+                    # Calculate exact lap time
+                    app.config['laptime'] = time.time() - app.config['whenracestarted'] - sum(app.config['prevlaptimes'])
 
-            return ('', 200)
-
-        elif command == 'lap-':
-            if app.config['racing'] == True:
-
-                if app.config['laps'] > 0:
-                    # Connect an instance of the db for this thread
-                    con = sqlite3.connect("BaseStation/EVGPTelemetry.sqlite")
-                    cur = con.cursor()
-
-                    # Remove all instances of the last lap count
-                    cur.execute("DELETE FROM {} WHERE laps = ?".format(app.config['table_name']), (app.config['laps'],))
-                    con.commit()
-                    
-                    app.config['laps'] -= 1
-                    
-                    # Remove the previus lapt time from the list
-                    app.config['prevlaptimes'] = app.config['prevlaptimes'][:-1]
-                    # When the lap time is calculated again, it will include the removed lap time
-
-            return ('', 200)
-
-        elif command == 'togglerace':
-            if app.config['racing'] == True:
-                app.config['racing'] = False
-                app.config['laps'] = 0
-                app.config['laptime'] = 0
+                    app.config['laps'] += 1
+                    app.config['prevlaptimes'].append(app.config['laptime'])
+                    app.config['laptime'] = 0
 
                 return ('', 200)
+
+            elif command == 'lap-':
+                if app.config['racing'] == True:
+
+                    if app.config['laps'] > 0:
+                        # Connect an instance of the db for this thread
+                        con = sqlite3.connect("BaseStation/EVGPTelemetry.sqlite")
+                        cur = con.cursor()
+
+                        # Remove all instances of the last lap count
+                        cur.execute("DELETE FROM {} WHERE laps = ?".format(app.config['table_name']), (app.config['laps'],))
+                        con.commit()
+
+                        app.config['laps'] -= 1
+
+                        # Remove the previus lapt time from the list
+                        app.config['prevlaptimes'] = app.config['prevlaptimes'][:-1]
+                        # When the lap time is calculated again, it will include the removed lap time
+
+                return ('', 200)
+
+            elif command == 'togglerace':
+                if app.config['racing'] == True:
+                    app.config['racing'] = False
+                    app.config['laps'] = 0
+                    app.config['laptime'] = None
+
+                    return ('', 200)
+
+                else:
+                    app.config['racing'] = True
+                    app.config['whenracestarted'] = time.time()
+
+                    return ('', 200)
 
             else:
-                app.config['racing'] = True
-                app.config['whenracestarted'] = time.time()
-
-                return ('', 200)
-
-        else:
-            return 'Invalid variable update command', 400
+                return 'Invalid variable update command', 400
     
+        else:
+            return 'No variable update commmand', 400
     else:
-        return 'No variable update commmand', 400
+        return 'User not authenticated', 401
 
 # Main Dashboard page
 @app.route("/")
