@@ -6,18 +6,21 @@ from datetime import datetime
 app = Flask(__name__)
 
 # Global variables
+app.config['dbpath'] = "BaseStation/EVGPTelemetry.sqlite"
 app.config['authedusrs'] = []
 
 app.config['laps'] = 0
 app.config['laptime'] = None
-app.config['targetlaptime'] = None
 app.config['prevlaptimes'] = []
+
+app.config['targetlaptime'] = None
+app.config['capBudget'] = None
 
 app.config['maxgpspoints'] = 300
 app.config['racing'] = False
 app.config['whenracestarted'] = None
 
-con = sqlite3.connect("BaseStation/EVGPTelemetry.sqlite")
+con = sqlite3.connect(app.config['dbpath'])
 cur = con.cursor()
 
 # Get the latest table
@@ -29,7 +32,7 @@ print("Reading from table:", app.config['table_name'])
 # Page to serve a json with data
 @app.route("/getdata")
 def getdata():
-    con = sqlite3.connect("BaseStation/EVGPTelemetry.sqlite")
+    con = sqlite3.connect(app.config['dbpath'])
     cur = con.cursor()
 
 
@@ -78,6 +81,7 @@ def getdata():
         laptime=app.config['laptime'],
         maxgpspoints=app.config['maxgpspoints'],
         targetlaptime=app.config['targetlaptime'],
+        capBudget=app.config['capBudget'],
         racing=app.config['racing']
     )
 
@@ -110,18 +114,75 @@ def usrupdate():
                     # Calculate exact lap time
                     app.config['laptime'] = time.time() - app.config['whenracestarted'] - sum(app.config['prevlaptimes'])
 
+                    ### Calculate target lap time ###
+                    # (What speed we need to go to use our whole battery in an hour
+                    try:
+                        con = sqlite3.connect(app.config['dbpath'])
+                        cur = con.cursor()
+
+                        # Calculate the ratio of speed to current used in previus data
+                        # Take the average of speed and current for 5 second groups
+                        cur.execute("""
+                            SELECT AVG(speed) AS avg_speed, AVG(current) AS avg_current
+                            FROM (
+                                SELECT speed, current, (ROW_NUMBER() OVER (ORDER BY time) - 1) / 20 AS grp
+                                FROM {}
+                            )
+                            GROUP BY grp
+                        """.format(app.config['table_name']))
+
+                        # History returns as [(speed, current), (speed, current), ...]
+                        hisotry = cur.fetchall()
+
+                        # Find and go with whatever speed draws the closest to 18 amps (18 amps for one hour = 18 amp hours)
+                        optimalSpeed = min(hisotry, key=lambda x: abs(x[1] - 18))[0]
+
+                        # Find average speed over the last lap
+                        cur.execute(f"""
+                            SELECT AVG(speed)
+                            FROM {app.config['table_name']}
+                            WHERE time > (
+                                SELECT MAX(time)
+                                FROM {app.config['table_name']}
+                                WHERE laps = ?
+                            )
+                            AND time <= (
+                                SELECT MAX(time)
+                                FROM {app.config['table_name']}
+                                WHERE laps = ?
+                            )
+                        """, (app.config['laps'] - 1, app.config['laps']))
+                        averageSpeed = cur.fetchone()[0]
+
+                        # Calculate lap distance (miles)
+                        lapDistance = averageSpeed * app.config['laptime'] /60
+
+                        # Calculate optimal lap time (seconds)
+                        app.config['targetlaptime'] = lapDistance * (optimalSpeed / 60)
+
+                        # Calculate the budget for the lap (amp hours)
+                        app.config['capBudget'] = (app.config['targetlaptime'] / 3600) * 18
+
+                        code = 200 # Success
+
+                    except Exception as e:
+                        print("Error calculating target lap time:", e)
+                        app.config['targetlaptime'] = "Error"
+                        app.config['capBudget'] = "Error"
+                        code = 500
+
                     app.config['laps'] += 1
                     app.config['prevlaptimes'].append(app.config['laptime'])
                     app.config['laptime'] = 0
 
-                return ('', 200)
+                return ('', code)
 
             elif command == 'lap-':
                 if app.config['racing'] == True:
 
                     if app.config['laps'] > 0:
                         # Connect an instance of the db for this thread
-                        con = sqlite3.connect("BaseStation/EVGPTelemetry.sqlite")
+                        con = sqlite3.connect(app.config['dbpath'])
                         cur = con.cursor()
 
                         # Remove all instances of the last lap count
@@ -146,6 +207,7 @@ def usrupdate():
                     app.config['prevlaptimes'] = []
                     app.config['targetlaptime'] = None
                     app.config['whenracestarted'] = None
+                    app.config['capBudget'] = None
 
                     return ('', 200)
 
