@@ -257,4 +257,4 @@ def debug():
 
 
 if __name__ == '__main__':
-    waitress.serve(app, host='0.0.0.0', port=5000)
+    waitress.serve(app, host='0.0.0.0', port=5000, threads=8)
