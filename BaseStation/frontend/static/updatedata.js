@@ -20,8 +20,8 @@ function startCharts() {
           labels: ['Throttle', 'Brake Pedal'],
           datasets: [{
             data: [data.throttle ?? 0, data.brake_pedal ?? 0],
-            backgroundColor: ['rgba(75, 192, 192, 0.2)', 'rgba(255, 99, 132, 0.2)'],
-            borderColor: ['rgba(75, 192, 192, 1)', 'rgba(255, 99, 132, 1)'],
+            backgroundColor: ['rgba(68, 192, 95, 0.75)', 'rgba(245, 90, 90, 0.75)'],
+            borderColor: ['rgb(68, 192, 95)', 'rgb(245, 90, 90)'],
             borderWidth: 1
           }]
         },
@@ -59,7 +59,7 @@ function startCharts() {
               x: data.GPS_x,
               y: data.GPS_y
             }],
-            backgroundColor: 'rgb(255, 99, 132)'
+            backgroundColor: 'rgb(54, 67, 126)'
           }]
         },
         options: {
@@ -74,6 +74,7 @@ function startCharts() {
       });
     });
 }
+
 
 // Authenticate lap controls
 function authenticateLapControls(code) {
@@ -96,6 +97,7 @@ function authenticateLapControls(code) {
     }
   });
 }
+
 
 // Update a variable on the server
 function updateServerVariable(updatecode) {
@@ -127,6 +129,17 @@ function updateData() {
       document.getElementById('batt_3').textContent = data.batt_3 ?? 'XXX';
       document.getElementById('batt_4').textContent = data.batt_4 ?? 'XXX';
 
+      // Check if any temperature is above 50 degrees and turn them red
+      ['motor_temp', 'batt_1', 'batt_2', 'batt_3', 'batt_4'].forEach(id => {
+        const element = document.getElementById(id);
+        const value = parseFloat(data[id]) ?? 0;
+        if (value > 50) {
+          element.style.color = 'red';
+        } else {
+          element.style.color = ''; // Reset to default
+        }
+      });
+
       // General
       document.getElementById('amp_hours').textContent = data.amp_hours ?? 'XXX.XXX';
       document.getElementById('voltage').textContent = data.voltage ?? 'XXX';
@@ -139,11 +152,11 @@ function updateData() {
       document.getElementById('laptime').textContent = data.laptime ?? 'XXX';
       document.getElementById('targetlaptime').textContent = data.targetlaptime ?? 'XXX';
 
-      //Amp hours remaining
+      //Amp hours remaining in lap
       document.getElementById('capBudget').textContent = data.capBudget ?? 'XXX.XXX';
 
       // Start/stop race button
-      let racing = data.racing ?? false;
+      const racing = data.racing ?? false;
       if (racing == true) {
         document.getElementById('racing').textContent = "Stop Race";
       }
@@ -172,9 +185,11 @@ function updateData() {
 }
 setInterval(updateData, 250); // Update every 250ms
 
+
 // Call startCharts on window load and resize
 window.addEventListener('load', startCharts);
 window.addEventListener('resize', startCharts);
+
 
 // Hide lap controls by default
 document.addEventListener('DOMContentLoaded', () => {
