@@ -3,9 +3,13 @@ import time
 import sqlite3
 from datetime import datetime
 
+import socket
+import select
+import pickle
+
 app = Flask(__name__)
 
-# Global variables
+## Global variables ##
 app.config['dbpath'] = "BaseStation/EVGPTelemetry.sqlite"
 app.config['authedusrs'] = []
 
@@ -20,6 +24,15 @@ app.config['maxgpspoints'] = 300
 app.config['racing'] = False
 app.config['whenracestarted'] = None
 
+# Set up a global connection the the socket
+SOCKETPATH = "/tmp/telemSocket"
+app.config['socketConn'] = socket.socket(socket.AF_UNIX, socket.SOCK_STREAM)
+app.config['socketConn'].connect(SOCKETPATH)
+print('Connected to socket:', SOCKETPATH)
+
+app.config['lastSocketDump'] = [None] * 15 # * Data collumns
+
+# Connect to the database
 con = sqlite3.connect(app.config['dbpath'])
 cur = con.cursor()
 
@@ -32,27 +45,24 @@ print("Reading from table:", app.config['table_name'])
 # Page to serve a json with data
 @app.route("/getdata")
 def getdata():
-    con = sqlite3.connect(app.config['dbpath'])
-    cur = con.cursor()
-
-
-    # Get the latest data from the database
-    cur.execute("SELECT * FROM {} ORDER BY time DESC LIMIT 1".format(app.config['table_name']))
-    data = cur.fetchone()
-
-    if data is None:
-        print("Nothing in DB!")
-        timestamp = throttle = brake_pedal = motor_temp = batt_1 = batt_2 = batt_3 = batt_4 = \
-        amp_hours = voltage = current = speed = miles = GPS_x = GPS_y = None
-
+    # See if new data is available
+    readable, _, _ = select.select([app.config['socketConn']], [], [], 0)
+    if readable:
+        # Read data from the socket
+        socketDump = app.config['socketConn'].recv(1024)  # 1024 byte buffer
+        data = pickle.loads(socketDump)
+        app.config['lastSocketDump'] = data
     else:
-        timestamp, throttle, brake_pedal, motor_temp, batt_1, batt_2, batt_3, batt_4, \
-        amp_hours, voltage, current, speed, miles, GPS_x, GPS_y = data
+        data = app.config['lastSocketDump']
 
-        # If racing, insert the current lap count into the database
-        if app.config['racing'] == True:
-            con.execute("INSERT INTO {} (timestamp, laps) VALUES (?, ?)".format(app.config['table_name']), (timestamp, app.config['laps']))
-            con.commit()
+    # Unpack the data
+    timestamp, throttle, brake_pedal, motor_temp, batt_1, batt_2, batt_3, batt_4, \
+    amp_hours, voltage, current, speed, miles, GPS_x, GPS_y = data
+
+    # If racing, insert the current lap count into the database
+    if app.config['racing'] == True:
+        con.execute("INSERT INTO {} (timestamp, laps) VALUES (?, ?)".format(app.config['table_name']), (timestamp, app.config['laps']))
+        con.commit()
 
     # Calculate current lap time
     if app.config['racing'] == True:
@@ -242,4 +252,5 @@ def debug():
 
 
 if __name__ == '__main__':
-    app.run()
+    app.run(host='0.0.0.0', port=5000)
+    # pass  # Gunicorn will handle running the app

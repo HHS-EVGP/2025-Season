@@ -2,10 +2,36 @@ import sqlite3
 from datetime import datetime
 import struct
 
+import socket
+import pickle
+import os
+
 from cc1101 import CC1101 # type: ignore
 from cc1101.config import RXConfig, Modulation # type: ignore
 
-# Transmission variables
+SOCKETPATH = "/tmp/telemSocket"
+
+# Remove existing socket file if it exists
+if os.path.exists(SOCKETPATH):
+    os.remove(SOCKETPATH)
+
+# Create a Unix socket and listen
+server = socket.socket(socket.AF_UNIX, socket.SOCK_STREAM)
+server.bind(SOCKETPATH)
+server.listen(1)
+
+print("Server is waiting for connection...")
+conn, _ = server.accept()
+print("Client connected.")
+
+# Initialize the socket data
+socketData = [None] * 15 # * Data columns
+
+# Initial data send
+data = pickle.dumps(socketData)
+conn.sendall(data)
+
+# Transmission variables ##
 rx_config = RXConfig.new(
     frequency=915,
     modulation=Modulation.MSK, # Read up: https://en.wikipedia.org/wiki/Minimum-shift_keying
@@ -84,4 +110,13 @@ while True:
         timestamp, throttle, brake_pedal, motor_temp, batt_1, batt_2, batt_3,
         batt_4, amp_hours, voltage, current, speed, miles, GPS_x, GPS_y
     ))
-    con.commit
+    con.commit()
+
+    # Update the socket data and send it
+    socketData = [
+         timestamp, throttle, brake_pedal, motor_temp, batt_1, batt_2, batt_3, batt_4, \
+         amp_hours, voltage, current, speed, miles, GPS_x, GPS_y
+    ]
+
+    data = pickle.dumps(socketData)
+    conn.sendall(data)
