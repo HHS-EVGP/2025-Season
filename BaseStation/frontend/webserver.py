@@ -1,4 +1,5 @@
 from flask import Flask, render_template, jsonify, request
+import waitress
 import time
 import sqlite3
 from datetime import datetime
@@ -45,6 +46,10 @@ print("Reading from table:", app.config['table_name'])
 # Page to serve a json with data
 @app.route("/getdata")
 def getdata():
+    # Connect db
+    con = sqlite3.connect(app.config['dbpath'])
+    cur = con.cursor()
+
     # See if new data is available
     readable, _, _ = select.select([app.config['socketConn']], [], [], 0)
     if readable:
@@ -61,7 +66,7 @@ def getdata():
 
     # If racing, insert the current lap count into the database
     if app.config['racing'] == True:
-        con.execute("INSERT INTO {} (timestamp, laps) VALUES (?, ?)".format(app.config['table_name']), (timestamp, app.config['laps']))
+        con.execute("INSERT INTO {} (time, laps) VALUES (?, ?)".format(app.config['table_name']), (timestamp, app.config['laps']))
         con.commit()
 
     # Calculate current lap time
@@ -252,5 +257,4 @@ def debug():
 
 
 if __name__ == '__main__':
-    app.run(host='0.0.0.0', port=5000)
-    # pass  # Gunicorn will handle running the app
+    waitress.serve(app, host='0.0.0.0', port=5000)
