@@ -31,7 +31,7 @@ socketData = [None] * 15 # * Data columns
 data = pickle.dumps(socketData)
 conn.sendall(data)
 
-# Transmission variables ##
+## Transmission variables ##
 rx_config = RXConfig.new(
     frequency=915,
     modulation=Modulation.MSK, # Read up: https://en.wikipedia.org/wiki/Minimum-shift_keying
