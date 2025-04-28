@@ -61,7 +61,7 @@ def getdata():
         amp_hours, voltage, current, speed, miles, GPS_x, GPS_y = data
 
     # Calculate current lap time
-    if app.config['racing']:
+    if app.config['racing'] and timestamp is not None:
         app.config['laptime'] = timestamp - app.config['whenracestarted'] - sum(app.config['prevlaptimes'])
     else:
         app.config['laptime'] = None
@@ -84,7 +84,7 @@ def getdata():
         GPS_x=GPS_x,
         GPS_y=GPS_y,
         laps=app.config['laps'],
-        laptime=round(app.config['laptime'], 2),
+        laptime=round(app.config['laptime'], 2) if app.config['laptime'] is not None else None,
         maxgpspoints=app.config['maxgpspoints'],
         targetlaptime=app.config['targetlaptime'],
         capBudget=app.config['capBudget'],
@@ -216,7 +216,7 @@ def usrupdate():
 
                     # Reset to default values
                     app.config['laps'] = 0
-                    app.config['laptime'] = None
+                    app.config['laptime'] = None    
                     app.config['prevlaptimes'] = []
                     app.config['targetlaptime'] = None
                     app.config['whenracestarted'] = None
@@ -259,4 +259,4 @@ def debug():
 
 
 if __name__ == '__main__':
-    waitress.serve(app, host='0.0.0.0', port=5000, threads=8)
+    waitress.serve(app, host='0.0.0.0', port=80, threads=8)
