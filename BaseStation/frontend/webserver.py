@@ -11,60 +11,62 @@ import pickle
 app = Flask(__name__)
 
 ## Global variables ##
-app.config['dbpath'] = "BaseStation/EVGPTelemetry.sqlite"
-app.config['authedusrs'] = []
+dbpath = "BaseStation/EVGPTelemetry.sqlite"
+authedusrs = []
+authcode = "hhsevgp"  # Make this whatever you like
 
-app.config['laps'] = 0
-app.config['laptime'] = None
-app.config['prevlaptimes'] = []
+laps = 0
+laptime = None
+prevlaptimes = []
 
-app.config['targetlaptime'] = None
-app.config['capBudget'] = None
+targetlaptime = None
+capBudget = None
 
-app.config['maxgpspoints'] = 300
-app.config['racing'] = False
-app.config['whenracestarted'] = None
+maxgpspoints = 300
+racing = False
+whenracestarted = None
 
-# Set up a global connection the the socket
+# Set up a global connection to the socket
 SOCKETPATH = "/tmp/telemSocket"
-app.config['socketConn'] = socket.socket(socket.AF_UNIX, socket.SOCK_STREAM)
-app.config['socketConn'].connect(SOCKETPATH)
+socketConn = socket.socket(socket.AF_UNIX, socket.SOCK_STREAM)
+socketConn.connect(SOCKETPATH)
 print('Connected to socket:', SOCKETPATH)
 
-app.config['lastSocketDump'] = [None] * 15 # * Data collumns
+lastSocketDump = [None] * 15  # * Data columns
 
 # Get the latest table
-con = sqlite3.connect(app.config['dbpath'])
+con = sqlite3.connect(dbpath)
 cur = con.cursor()
 cur.execute("SELECT name FROM sqlite_master WHERE type='table' AND name LIKE 'hhs_%' ORDER BY name DESC LIMIT 1")
-app.config['table_name'] = cur.fetchone()[0]
-print("Reading from table:", app.config['table_name'])
+table_name = cur.fetchone()[0]
+print("Reading from table:", table_name)
 con.close()
 
 
 # Page to serve a json with data
 @app.route("/getdata")
 def getdata():
+    global lastSocketDump, laptime, racing, whenracestarted, prevlaptimes
 
     # See if new data is available
-    readable, _, _ = select.select([app.config['socketConn']], [], [], 0)
+    readable, _, _ = select.select([socketConn], [], [], 0)
     if readable:
         # Read data from the socket
-        socketDump = app.config['socketConn'].recv(1024)  # 1024 byte buffer
+        socketDump = socketConn.recv(1024)  # 1024 byte buffer
         data = pickle.loads(socketDump)
-        app.config['lastSocketDump'] = data
+        lastSocketDump = data
     else:
-        data = app.config['lastSocketDump']
+        data = lastSocketDump
 
     # Unpack the data
     timestamp, throttle, brake_pedal, motor_temp, batt_1, batt_2, batt_3, batt_4, \
         amp_hours, voltage, current, speed, miles, GPS_x, GPS_y = data
 
     # Calculate current lap time
-    if app.config['racing'] and timestamp is not None:
-        app.config['laptime'] = timestamp - app.config['whenracestarted'] - sum(app.config['prevlaptimes'])
+    if racing and timestamp is not None:
+        laptime = timestamp - whenracestarted - sum(prevlaptimes)
     else:
-        app.config['laptime'] = None
+        laptime = None
 
     return jsonify(
         systime=datetime.now().strftime("%H:%M:%S"),
@@ -83,36 +85,36 @@ def getdata():
         miles=miles,
         GPS_x=GPS_x,
         GPS_y=GPS_y,
-        laps=app.config['laps'],
-        laptime=round(app.config['laptime'], 2) if app.config['laptime'] is not None else None,
-        maxgpspoints=app.config['maxgpspoints'],
-        targetlaptime=app.config['targetlaptime'],
-        capBudget=app.config['capBudget'],
-        racing=app.config['racing']
+        laps=laps,
+        laptime=round(laptime, 2) if laptime is not None else None,
+        maxgpspoints=maxgpspoints,
+        targetlaptime=targetlaptime,
+        capBudget=capBudget,
+        racing=racing
     )
 
 
 # Respond to an authentication attempt
 @app.route("/usrauth", methods=['POST'])
 def usrauth():
-    authcode = "hhsevgp" # Make this whatever you like
+    global authedusrs, authcode
     authattempt = request.get_data(as_text=True)
 
     if authattempt == authcode:
-        if request.remote_addr not in app.config['authedusrs']:
-            app.config['authedusrs'].append(request.remote_addr)
+        if request.remote_addr not in authedusrs:
+            authedusrs.append(request.remote_addr)
         return ('', 200)
     else:
         return 'Invalid authentication code', 401
 
 
 def calc_pace(cur):
+    global targetlaptime, capBudget, laptime, whenracestarted, laps, table_name
 
     ### Calculate target lap time ###
     # (What speed we need to go to use our whole battery in an hour
     try:
-
-        # Calculate the ratio of speed to current used in previus data
+        # Calculate the ratio of speed to current used in previous data
         # Take the average of speed and current for 5 second groups
         cur.execute("""
             SELECT AVG(speed)
@@ -120,122 +122,121 @@ def calc_pace(cur):
             WHERE time > ?
                 AND laps = ?
                 AND current BETWEEN 17.5 AND 18.5
-        """.format(app.config['table_name']), [app.config['whenracestarted'], app.config['laps'] - 1])
+        """.format(table_name), [whenracestarted, laps - 1])
         optimalSpeed = cur.fetchone()[0]
 
         # Find average speed over the last lap
         cur.execute(f"""
             SELECT AVG(speed)
-            FROM {app.config['table_name']}
+            FROM {table_name}
             WHERE time > (
                 SELECT MAX(time)
-                FROM {app.config['table_name']}
+                FROM {table_name}
                 WHERE time > ? AND laps = ?
             )
             AND time <= (
                 SELECT MAX(time)
-                FROM {app.config['table_name']}
+                FROM {table_name}
                 WHERE time > ? AND laps = ?
             )
-        """, (app.config['whenracestarted'], app.config['laps'] - 1, app.config['whenracestarted'], app.config['laps']))
+        """, (whenracestarted, laps - 1, whenracestarted, laps))
         averageSpeed = cur.fetchone()[0]
 
         # Get the "authoritative" lap time based on the database
         cur.execute("""
             SELECT MAX(time) - MIN(time)
             FROM {}
-            WHERE time > ? AND laps IS NULL""".format(app.config['table_name']), [app.config['whenracestarted']])
-        app.config['laptime'] = cur.fetchone()[0]
+            WHERE time > ? AND laps IS NULL""".format(table_name), [whenracestarted])
+        laptime = cur.fetchone()[0]
 
         # Calculate lap distance (miles)
-        lapDistance = averageSpeed * app.config['laptime'] / 60
+        lapDistance = averageSpeed * laptime / 60
 
         # Calculate optimal lap time (seconds)
-        app.config['targetlaptime'] = lapDistance * (optimalSpeed / 60)
+        targetlaptime = lapDistance * (optimalSpeed / 60)
 
         # Calculate the budget for the lap (amp hours)
-        app.config['capBudget'] = (app.config['targetlaptime'] / 3600) * 18
+        capBudget = (targetlaptime / 3600) * 18
 
     except Exception as e:
         print("Error calculating target lap time:", e)
-        app.config['targetlaptime'] = "Error"
-        app.config['capBudget'] = "Error"
+        targetlaptime = "Error"
+        capBudget = "Error"
 
 
 # Respond to an updated variable
 @app.route("/usrupdate", methods=['POST'])
 def usrupdate():
+    global authedusrs, laps, laptime, prevlaptimes, racing, whenracestarted, targetlaptime, capBudget, table_name
+
     # Check if the user is authenticated
-    if request.remote_addr in app.config['authedusrs']:
+    if request.remote_addr in authedusrs:
         command = request.get_data(as_text=True)
 
-        # TODO flip the logic so the error message is close to the error condition
-        # Then you don't need to indent so many levels; just return on error
-
         if command:
-            con = sqlite3.connect(app.config['dbpath'])
+            con = sqlite3.connect(dbpath)
             cur = con.cursor()
 
-            if command == 'lap+' and app.config['racing']:
+            if command == 'lap+' and racing:
                 calc_pace(cur)
 
                 # Store the previous lap number in the database
-                cur.execute("UPDATE {} SET laps = ? WHERE time > ? AND laps IS NULL".format(app.config['table_name']),
-                            [app.config['whenracestarted'], app.config['laps']])
+                cur.execute("UPDATE {} SET laps = ? WHERE time > ? AND laps IS NULL".format(table_name),
+                            [whenracestarted, laps])
                 con.commit()
 
                 # Increment the lap number
-                app.config['laps'] += 1
-                app.config['prevlaptimes'].append(app.config['laptime'])
-                app.config['laptime'] = 0
+                laps += 1
+                if laptime is not None:
+                    prevlaptimes.append(laptime)
+                laptime = 0
 
                 return ('', 200)
 
-            elif command == 'lap-' and app.config['racing']:
+            elif command == 'lap-' and racing:
 
-                if app.config['laps'] > 0:
+                if laps > 0:
                     # Remove all instances of the lap count
-                    cur.execute("UPDATE {} SET laps = NULL WHERE time > ? AND laps = ?".format(app.config['table_name']),
-                                (app.config['whenracestarted'], app.config['laps'],))
+                    cur.execute("UPDATE {} SET laps = NULL WHERE time > ? AND laps = ?".format(table_name),
+                                (whenracestarted, laps,))
                     con.commit()
 
-                    app.config['laps'] -= 1
+                    laps -= 1
 
                     # Revert the current pace to the previous lap time
                     calc_pace(cur)
 
-                    # Remove the previus lap time from the list
-                    app.config['prevlaptimes'].pop()
-                    # When the lap time is calculated again, it will include the removed lap time
+                    # Remove the previous lap time from the list
+                    prevlaptimes.pop()
 
                 return ('', 200)
 
             elif command == 'togglerace':
-                if app.config['racing']:
-                    app.config['racing'] = False
+                if racing:
+                    racing = False
 
                     # Reset to default values
-                    app.config['laps'] = 0
-                    app.config['laptime'] = None    
-                    app.config['prevlaptimes'] = []
-                    app.config['targetlaptime'] = None
-                    app.config['whenracestarted'] = None
-                    app.config['capBudget'] = None
+                    laps = 0
+                    laptime = None
+                    prevlaptimes = []
+                    targetlaptime = None
+                    whenracestarted = None
+                    capBudget = None
 
                     return ('', 200)
 
                 else:
-                    app.config['racing'] = True
+                    racing = True
 
-                    cur.execute("SELECT MAX(time) FROM " + app.config['table_name'])
-                    app.config['whenracestarted'] = cur.fetchone()[0]
+                    cur.execute("SELECT MAX(time) FROM " + table_name)
+                    whenracestarted = cur.fetchone()[0]
 
                     return ('', 200)
 
             else:
                 return 'Invalid variable update command', 400
         else:
-            return 'No variable update commmand', 400
+            return 'No variable update command', 400
     else:
         return 'User not authenticated', 401
 
@@ -246,7 +247,7 @@ def dashboard():
     return render_template('dashboard.html')
 
 
-# Page for anilyzing the car's path
+# Page for analyzing the car's path
 @app.route("/map")
 def map():
     return render_template('map.html')
