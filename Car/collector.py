@@ -5,6 +5,7 @@ from adafruit_ads1x15.analog_in import AnalogIn # type: ignore
 import board # type: ignore
 from adafruit_lsm6ds.lsm6dsox import LSM6DSOX # type: ignore
 from adafruit_ads1x15.ads1115 import ADS # type: ignore
+
 from cc1101 import CC1101 # type: ignore
 from cc1101.config import TXConfig, Modulation # type: ignore
 
@@ -13,10 +14,37 @@ import subprocess
 import time
 import logging
 import struct
+import sqlite3
 
 print("I guess all of the packages loaded! (:")
 
 OnGPStime = False
+
+# Connect to the car's database
+con = sqlite3.connect('./CarTelemetry.sqlite')
+cur = con.cursor()
+
+# Create the initial table (Named main)
+cur.execute('''
+CREATE TABLE IF NOT EXISTS main (
+    time REAL UNIQUE PRIMARY KEY,,
+    amp_hours REAL,
+    voltage REAL,
+    current REAL,
+    speed REAL,
+    miles REAL,
+    throttle REAL,
+    brake REAL,
+    motor_temp REAL,
+    batt_1 REAL,
+    batt_2 REAL,
+    batt_3 REAL,
+    batt_4 REAL,
+    GPS_x REAL,
+    GPS_y REAL
+)
+''')
+con.commit()
 
 tx_config = TXConfig.new(
     frequency=915,
@@ -251,33 +279,47 @@ def analogPull():
 
     return throttle, brake, motor_temp, batt_1, batt_2, batt_3, batt_4
 
+insert_data_sql = """
+    INSERT INTO main (
+        time, Throttle, Brake_Pedal, Motor_temp, Battery_1, Battery_2, Battery_3, Battery_4,
+        ca_AmpHrs, ca_Voltage, ca_Current, ca_Speed, ca_Miles, GPS_X, GPS_Y
+    ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+    """
 
 def mainloop():
 
     while True:
-        # Get Data
         data_2_send = b''
 
+        # Get Data
         timestamp = time.time()
         amp_hours, voltage, current, speed, miles = UART_CA()
         throttle, brake, motor_temp, batt_1, batt_2, batt_3, batt_4 = analogPull()
         GPS_x, GPS_y = UART_GPS()
 
-        # TODO save original variables to sqlite on the car, rather than log?
-        # Maybe also add a try-except inside the loop to continue storing data even if something goes wrong
+        data = [
+         timestamp, throttle, brake, motor_temp, batt_1, batt_2, batt_3, batt_4, \
+         amp_hours, voltage, current, speed, miles, GPS_x, GPS_y
+        ]
 
-        # Encode Data
-        for var in timestamp, amp_hours, voltage, current, speed, miles, throttle, brake, motor_temp, batt_1, batt_2, batt_3, batt_4, GPS_x, GPS_y:
-            data_2_send += struct.pack('<d', var)
+        # Add data to the database:
+        cur.execute(insert_data_sql, data)
+        con.commit()
 
-        # Send Data
-        GPIO.output(sendLED, 1)
-        radio.transmit(tx_config, data_2_send)
-        GPIO.output(sendLED, 0)
-        print("Packet sent")
+        try:
+            # Encode Data
+            for var in data:
+                data_2_send += struct.pack('<d', var)
 
-        # Log Data
-        logging.info(data_2_send)
+            # Send Data
+            GPIO.output(sendLED, 1)
+            radio.transmit(tx_config, data_2_send)
+            GPIO.output(sendLED, 0)
+            print("Packet sent")
+
+        except Exception as e:
+            print("Error sending data:", e)
+        
         time.sleep(0.25)
 
 
