@@ -1,1 +1,3 @@
-Base Station/node_modules/
+.vscode/
+BaseStation/frontend/flaskenv
+BaseStation/frontend/__pycache__

@@ -1,0 +1,69 @@
+body {
+  /* The school's color */
+  background-color: #061045;
+  padding: 3vh;
+} 
+
+p {
+  font-family: Georgia, serif;
+  font-size: 2em;
+}
+
+button {
+  background-color: transparent;
+  margin: 0.5em;
+  border: 3px;
+  border-style: solid;
+  border-radius: 1em;
+  color: black;
+
+  font-family: Georgia, serif;
+  font-weight: bold;
+  font-size: 1.5em;
+}
+
+button:hover {
+  transform: scale(1.1);
+  transition: transform 0.2s ease-in-out;
+}
+
+#outer {
+  height: 94vh;
+}
+
+.row {
+  height: 100%;
+  gap: 1em;
+}
+
+.block {
+  background-color: #ffffffd5;
+  border-radius: 2ex;
+  padding: 1em;
+}
+
+.halfblk {
+  height: calc(50% - 0.5em);
+
+}
+
+.bordered {
+  border: 3px;
+  padding: 0;
+  border-style: solid;
+  border-radius: 2ex;
+}
+
+.heading {
+  font-size: 2.2em;
+  font-weight: bold;
+}
+
+.bignum {
+  font-size: 4em;
+  margin-bottom: 0px;
+}
+
+.data {
+  text-decoration: underline;
+}

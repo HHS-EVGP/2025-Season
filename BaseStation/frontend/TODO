@@ -1,0 +1,6 @@
+What still needs to be done for fronted
+    - Improve optimal lap time calculator
+
+    - Icon on latest data point for gps scatter plot? (Not looking possible with chart.js right now)
+
+    - Make the map and debug pages (Probably won't happen till next season)

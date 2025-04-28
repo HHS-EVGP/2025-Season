@@ -1,0 +1,13 @@
+[Unit]
+Description=Start up Base Station receiver
+After=network.target
+
+[Service]
+Type=simple
+User=basestation
+ExecStart=/home/basestation/startup.sh
+WorkingDirectory=/home/basestation
+Restart=on-failure
+
+[Install]
+WantedBy=multi-user.target

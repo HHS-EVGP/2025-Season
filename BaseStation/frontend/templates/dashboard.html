@@ -1,0 +1,153 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+  <link rel="icon" type="image/x-icon" href="{{ url_for('static', filename='favicon.png') }}">
+  <title>HHS EVGP Live Data</title>
+
+  <!--Boostrap and chartjs-->
+  <link href="{{ url_for('static', filename='bootstrap.min.css') }}" rel="stylesheet">
+  <script src="{{ url_for('static', filename='bootstrap.bundle.min.js') }}"></script>
+  <script src="{{ url_for('static', filename='chart.js') }}"></script>
+
+  <!--Custom Stuff-->
+  <link href="{{ url_for('static', filename='style.css') }}" rel="stylesheet">
+  <script src="{{ url_for('static', filename='updatedata.js') }}"></script>
+
+</head>
+
+
+<body>
+  <div id="outer" class="container-fluid text-center">
+    <div class="row">
+
+      <div class="col-lg" style="padding-left: 0; padding-right: 0;">
+
+        <div class="block halfblk d-flex flex-column justify-content-center">
+
+          <p class="heading">Statuses</p>
+          <p>Server Time: <span class="data" id="systime"></span></p>
+          <p>Timestamp: <span class="data" id="timestamp"></span></p>
+
+          <div>
+            <canvas id="throttleBrakeChart" width="100%" height="150%"></canvas>
+          </div>
+          <br>
+
+        </div>
+
+        <div class="block halfblk d-flex flex-column justify-content-center" style="margin-top: 1em;">
+
+          <p class="heading">Temperatures</p>
+          <p>Motor: <span class="data" id="motor_temp"></span>°f</p>
+          <p>Battery 1: <span class="data" id="batt_1"></span>°f</p>
+          <p>Battery 2: <span class="data" id="batt_2"></span>°f</p>
+          <p>Battery 3: <span class="data" id="batt_3"></span>°f</p>
+          <p>Battery 4: <span class="data" id="batt_4"></span>°f</p>
+
+        </div>
+
+      </div>
+
+
+      <div class="block col-lg d-flex flex-column justify-content-center" style="text-align: center;">
+
+        <div class="bordered">
+          <p class="bignum data" id="amp_hours"></p>
+          <p>Amp Hours</p>
+        </div>
+
+        <br>
+        <p>Current: <span class="data" id="current"></span>a</p>
+        <p>Voltage: <span class="data" id="voltage"></span>v</p>
+        <br>
+
+        <div class="bordered">
+          <p class="bignum data" id="miles"></p>
+          <p>Miles</p>
+        </div>
+
+        <br>
+        <p>Speed: <span class="data" id="speed"></span>mph</p>
+        <br>
+
+        <div class="bordered">
+          <p id="capBudget" class="bignum data"></p>
+          <p>Lap's A⋅h Budget</p>
+        </div>
+
+      </div>
+
+
+      <div class="block col-lg d-flex flex-column justify-content-center">
+
+        <p class="heading">GPS</p>
+        <p>X: <span class="data" id="GPS_x"></span></p>
+        <p>Y: <span class="data" id="GPS_y"></span></p>
+
+        <div>
+          <!--This specific width and heigt give its collum about the same height as the center column-->
+          <canvas id="gpsplot" width="100%" height="300%"></canvas>
+        </div>
+
+        <!--Button to authenticate lap controls-->
+        <span>
+          <button id="authlapcontrols" data-bs-toggle="modal" data-bs-target="#lapauthmodal">
+            Authenticate Lap Controls
+          </button>
+        </span>
+
+        <!--Modal to authenticate lap controls-->
+        <div class="modal fade" id="lapauthmodal" tabindex="-1" aria-labelledby="exampleModalLabel" aria-hidden="true">
+          <div class="modal-dialog">
+            <div class="modal-content bg-dark text-white">
+              <div class="modal-header border-secondary">
+                <h1 class="modal-title fs-5" id="exampleModalLabel">Enable lap controls?</h1>
+                <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"
+                  aria-label="Cancel"></button>
+              </div>
+              <div class="modal-body text-start">
+                The number of laps and lap time are stored on the server, and are visible to everyone, but can be
+                changed by
+                you if you
+                authenticate. <br><br>
+                Be sure to designate one person per team to be in charge of counting laps, as the lap information is
+                synced across all devices.
+                <br><br>
+                <form id="lapAuthForm" onsubmit="authenticateLapControls(code); return false;">
+                  <label for="accessCode">Enter Access Code:</label>
+                  <input type="text" id="accessCode" name="accessCode" required oninput="code = this.value"
+                    class="form-control bg-dark text-white border-secondary">
+                    <div style="color: red;" id="autherror">Incorrect Access Code</div>
+              </div>
+              <div class="modal-footer border-secondary">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+                <button type="submit" data-bs-dismiss="modal" class="btn btn-primary">Authenticate</button>
+                </form>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!--Lap controls to be shown when acess code entered-->
+        <span id="lapcontrols">
+          <button onclick="updateServerVariable('lap-')">Lap-</button>
+          <button onclick="updateServerVariable('lap+')">Lap+</button>
+          <button id="racing" onclick="updateServerVariable('togglerace')">Start Race</button>
+        </span>
+
+        <div class="bordered">
+          <p>Laps: <span id="laps" class="data"></span></p>
+          <p>Lap Time: <span id="laptime" class="data"></span>s</p>
+          <p>Target Lap Time: <span id="targetlaptime" class="data"></span>s</p>
+        </div>
+
+      </div>
+
+
+    </div>
+  </div>
+
+</body>
+
+</html>

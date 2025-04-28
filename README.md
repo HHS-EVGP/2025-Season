@@ -1,99 +1,62 @@
-# EV Data Collection and Visualization System (EVDCVS)
+## EV Data Collection and Visualization System
 
-This project is a data collection and visualization system for an Electric Vehicle (EV) using a Raspberry Pi with an RFM9x LoRa radio. The system collects data, stores it in CSV files, and visualizes it through a web interface.
+This project is a data collection and visualization system for an Electric Vehicle (EV) using a two Raspberry Pis, rpitx, an rtl-sdr, and gnu radio. The pi collects data, logs it, and transmits it to a pit station. The station stores the data in an sqlite database, and visualizes it through a web interface.
 
-## Table of Contents
+### Structure
 
-- [Overview](#overview)
-- [Components](#components)
-  - [Python Script (`main.py`)](#python-script-mainpy)
-  - [Node.js Server (`server.js`)](#nodejs-server-serverjs)
-  - [Frontend Components (`front_end` directory)](#frontend-components-front_end-directory)
-- [Data Flow](#data-flow)
-- [Installation](#installation)
-- [Usage](#usage)
-- [License](#license)
+The basic structure of the system is as follows:
 
-## Overview
+  - [collector.py](/Car/collector.py) receives data from various sources on the car, and transmits it using [rpitx](https://github.com/F5OEO/rpitx) and on-off keying
 
-The system collects real-time data from various sensors on the EV using a Raspberry Pi connected to an RFM9x LoRa radio. The data is processed and saved into CSV files, which are then served by a Node.js server and visualized in a web-based user interface.
+  - [decoder.py](/BaseStation/decoder.py) uses [gnuradio](https://gnuradio.org/) and an [rtl-sdr](https://www.rtl-sdr.com/) on the base station to decode the transmitted data, write it to an [sqlite](https://www.sqlite.org/) database.
 
-## Components
+  - A [flask](https://flask.palletsprojects.com/en/stable/) webserver reads from the database and hosts a website to display data and allow debuging in the field
+    > **Note:** Currently, only the backend is finished. The webserver is coming soon!
 
-### Python Script (`main.py`)
+### Prerequisites
 
-- **Purpose**: Collects data from the LoRa radio and stores it in a CSV file.
-- **Functionality**:
-  - Configures the LoRa radio using the `adafruit_rfm9x` library.
-  - Checks for the next available file name and prepares to write data.
-  - Enters an infinite loop where it:
-    - Receives data packets from the LoRa radio.
-    - Parses and processes incoming data.
-    - Logs data to a CSV file with a timestamp and counter.
-  - Provides error handling for data processing.
+**Car**: (Tested on pi 3b+)
 
-### Node.js Server (`server.js`)
+  - [rpitx](https://github.com/F5OEO/rpitx) needs to be installed with the ```sendook``` file in the working directory (See their readme)
+  - ```adafruit-circuitpython-ads1x15```, ```Adafruit-ADS1x15```, ```adafruit-circuitpython-lsm6ds```, and ```pyserial``` need to be installed with pip
 
-- **Purpose**: Serves the CSV data and frontend files over HTTP.
-- **Functionality**:
-  - Uses the Express framework to serve static files from the `front_end` directory.
-  - Provides an endpoint (`/list-files`) to list all CSV files available in the `front_end` directory.
-  - Fetches and returns the most recent CSV data upon request.
+**Base station**: (Tested on pi 3b+)
+  - ```gnuradio``` needs to be installed with apt
+  - flask must be installed with a virtual python enviroment. See flask's [documentation](https://flask.palletsprojects.com/en/stable/installation/#python-version)
 
-### Frontend Components (`front_end` directory)
+### Hardware Needed
 
-- **`index.html`**: Main HTML page for the web interface.
-- **`dropdown.js`**: Handles user interaction for selecting different data views.
-- **`main.js`**: Fetches the latest CSV data and updates the UI dynamically.
-- **`objects.js`**: Defines classes for various data visualization components (e.g., odometers, graphs).
-- **`style.css`**: CSS styles for layout and design.
-- **Sample Data (`001.data.csv`)**: Example CSV file containing collected data.
+  - An rtl-sdr. You can get just the dongle [here](), or the dongle with an antenna kit [here]()
+  - A bandpass filter
+  - Gps Unit
+  > More info to come about hardware stack 
 
-## Data Flow
+### Running
 
-1. **Data Collection**: The Raspberry Pi collects data from the EV via the LoRa radio.
-2. **Data Storage**: The data is processed by `main.py` and stored in CSV files.
-3. **Data Serving**: The Node.js server (`server.js`) serves the CSV files and static frontend.
-4. **Data Visualization**: The web interface fetches and displays the latest data dynamically for real-time monitoring.
+> Documentation to come once webserver and services are set up
 
-## Installation
+### Acknowledgements
 
-1. **Install necessary Python libraries**:
-```bash
-pip install adafruit-circuitpython-rfm9x
-Set Up Node.js Server:
-```
+*This project is licensed under the MIT License.*
 
-2. **Install node.js**:
-```bash
-curl -o- https://raw.githubusercontent.com/nvm-sh/nvm/v0.40.0/install.sh | bash
-nvm install 20
-```
+### Notes about new protocol (rough)
 
-3. **Install dependencies**:
-```bash
-npm install express
-```
+New protocol using CC1101
 
-## Usage
+Car: CC1101 Unit and https://pypi.org/project/cc1101-python/
 
-1. **Make sure that server.js is running**:
-```bash
-node server.js
-```
+Station:
 
-2. **Run the Python Script**:
-```bash
-python3 main.py
-```
+FT232H Adapter
+https://ftdichip.com/wp-content/uploads/2020/07/DS_FT232H.pdf
 
-3. **Run the Node.js server**:
-Access the Web Interface:
+https://www.amazon.com/KOOBOOK-FT232H-High-Speed-Multifunction-Module/dp/B07T9CPMHT/ref=dp_fod_d_sccl_1/141-4031877-3157017
 
-Open a web browser and navigate to http://electric.local (or the IP address of the Raspberry Pi).
+Library :https://pypi.org/project/pyftdi/
 
+CC1101
+https://pypi.org/project/cc1101-python/
 
-## License
-This project is licensed under the MIT License. 
+CC1101 Unit and https://pypi.org/project/cc1101/
 
-Also, this whole README.md file was writen by ChatGPT. 😀
+CC1101 Datasheet: https://www.ti.com/lit/ds/symlink/cc1101.pdf

@@ -1,12 +1,42 @@
 #!/usr/bin/python
 
 import RPi.GPIO as gpio # type: ignore
-from subprocess import call
+from subprocess import subprocess
 import time
-from functions.start import start_service
-from functions.stop import stop_service
-from functions.restart import restart_now
-from functions.shutdown import shutdown_now
+
+
+# Functions
+def restart_now():
+    # Command to restart the Raspberry Pi
+    restart_command = ["sudo reboot"]
+
+    # Execute the restart command
+    subprocess.run(restart_command, check=True)
+
+def shutdown_now():
+    # Command to restart the Raspberry Pi
+    restart_command = ["sudo reboot"]
+
+    # Execute the restart command
+    subprocess.run(restart_command, check=True)
+
+def start_service(service_name):
+    try:
+        # Starting the service
+        subprocess.run(["sudo systemctl start", service_name], check=True)
+        print(f"{service_name} successfully started.")
+    except subprocess.CalledProcessError as e:
+        # An error occurred while trying to start the service
+        print(f"Failed to start {service_name}: {e}")
+
+def stop_service(service_name):
+    try:
+        # Starting the service
+        subprocess.run(["sudo systemctl stop", service_name], check=True)
+        print(f"{service_name} successfully started.")
+    except subprocess.CalledProcessError as e:
+        # An error occurred while trying to start the service
+        print(f"Failed to stop {service_name}: {e}")
 
 Halt_other = False
 

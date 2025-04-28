@@ -1,18 +1,9 @@
 Season Master Todolist:
 
-General:
-
-  Priority 1
-    -Switch to sqlite database
-    -More redundant transmission of data (comes with the database)
-
-  Priority 2
-    -Add Gps
-    -Add live and Post analysys software
-      -Calculate optimal lap time
-
-  Priority 3
-    -Clean code (It's looking pretty clean, but just to be sure)
+General:  
+  -Add live and Post analysys `software
+    -Calculate optimal lap/section time
+  -Make a mobile app to define track boundaries
 
 Car:
   -Set up a new Pi
@@ -21,9 +12,9 @@ Car:
     Username: Car
     Hostname: carpi.local
 
-    Install with pip: adafruit-circuitpython-ads1x15, Adafruit-ADS1x15, adafruit-circuitpython-rfm9x, adafruit-circuitpython-lsm6ds, pyserial
+    Install with pip: adafruit-circuitpython-ads1x15, Adafruit-ADS1x15, adafruit-circuitpython-lsm6ds, pyserial
     Install with apt: dos2unix
 
     Commands:
-      Install: pip3 install adafruit-circuitpython-ads1x15 Adafruit-ADS1x15 adafruit-circuitpython-rfm9x adafruit-circuitpython-lsm6ds pyserial && sudo apt install -y dos2unix 
+      Install: pip3 install adafruit-circuitpython-ads1x15 Adafruit-ADS1x15 adafruit-circuitpython-lsm6ds pyserial && sudo apt install -y dos2unix 
       Verify: sudo systemctl status transmit.service code_check.service buttons.service (I don't think you usually need to be root to do this, but I will leave it as is to be safe)

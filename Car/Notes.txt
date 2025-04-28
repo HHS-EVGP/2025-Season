@@ -1,5 +1,6 @@
 User:     "car"
 Password: "evgp"
-hostname: "carpi.local"
+hostname: "car.local"
 
-Look at ToDo
+Software needed:
+    With pip: adafruit-circuitpython-ads1x15, Adafruit-ADS1x15, adafruit-circuitpython-lsm6ds, pyserial, cc1101-python

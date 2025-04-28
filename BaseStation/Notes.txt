@@ -1,0 +1,6 @@
+User:     "data"
+Password: "evgp"
+hostname: "data.local"
+
+Software needed:
+    With pip: python-cc1101, Flask
