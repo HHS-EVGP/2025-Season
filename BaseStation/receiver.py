@@ -21,15 +21,15 @@ server.bind(SOCKETPATH)
 server.listen(1)
 
 print("Server is waiting for connection...")
-conn, _ = server.accept()
+sock, _ = server.accept()
 print("Client connected.")
 
 # Initialize the socket data
-socketData = [None] * 15 # * Data columns
+values = [None] * 15 # * Data columns
 
 # Initial data send
-data = pickle.dumps(socketData)
-conn.sendall(data)
+data = pickle.dumps(values)
+sock.sendall(data)
 
 ## Transmission variables ##
 rx_config = RXConfig.new(
@@ -53,8 +53,8 @@ table_name = "hhs_" + datetime.now().strftime("%Y_%m_%d")
 print("Today's table name is:", table_name)
 
 # If table_name does not exist as a table, create it
-create_table_sql = """
-    CREATE TABLE IF NOT EXISTS {} (
+create_table_sql = f"""
+    CREATE TABLE IF NOT EXISTS {table_name} (
     time REAL UNIQUE PRIMARY KEY,
     Throttle REAL,
     Brake_Pedal REAL,
@@ -71,10 +71,17 @@ create_table_sql = """
     GPS_X REAL,
     GPS_Y REAL,
     laps NUMERIC
-)""".format(table_name)
+)"""
 
 cur.execute(create_table_sql)
 con.commit()
+
+insert_data_sql = f"""
+    INSERT INTO {table_name} (
+        time, Throttle, Brake_Pedal, Motor_temp, Battery_1, Battery_2, Battery_3, Battery_4,
+        ca_AmpHrs, ca_Voltage, ca_Current, ca_Speed, ca_Miles, GPS_X, GPS_Y
+    ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+    """
 
 while True:
     IN_data = []
@@ -90,33 +97,22 @@ while True:
 
     # Assign the extracted data to the respective variables
     timestamp, throttle, brake_pedal, motor_temp, batt_1, batt_2, batt_3, batt_4, \
-    amp_hours, voltage, current, speed, miles, GPS_x, GPS_y = IN_data
+        amp_hours, voltage, current, speed, miles, GPS_x, GPS_y = IN_data
 
-    # Interpret nan as NULL
+    # Interpret nan as NULL in the database
     for var in [throttle, brake_pedal, motor_temp, batt_1, batt_2, batt_3, batt_4,
                 amp_hours, voltage, current, speed, miles, GPS_x, GPS_y]:
         if var == float('nan'):
             var = None
 
     # Insert the data into the database
-    insert_data_sql = """
-        INSERT INTO {} (
-            time, Throttle, Brake_Pedal, Motor_temp, Battery_1, Battery_2, Battery_3, Battery_4,
-            ca_AmpHrs, ca_Voltage, ca_Current, ca_Speed, ca_Miles, GPS_X, GPS_Y
-        ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
-        """
-
-    cur.execute(insert_data_sql, (
-        timestamp, throttle, brake_pedal, motor_temp, batt_1, batt_2, batt_3,
-        batt_4, amp_hours, voltage, current, speed, miles, GPS_x, GPS_y
-    ))
-    con.commit()
-
-    # Update the socket data and send it
-    socketData = [
+    values = [
          timestamp, throttle, brake_pedal, motor_temp, batt_1, batt_2, batt_3, batt_4, \
          amp_hours, voltage, current, speed, miles, GPS_x, GPS_y
     ]
+    cur.execute(insert_data_sql, values)
+    con.commit()
 
-    data = pickle.dumps(socketData)
-    conn.sendall(data)
+    # Pickle the socket data and send it
+    data = pickle.dumps(values)
+    sock.sendall(data)
