@@ -96,18 +96,18 @@ while True:
             IN_data.append(struct.unpack('<d', chunk)[0])
 
     # Assign the extracted data to the respective variables
-    timestamp, throttle, brake_pedal, motor_temp, batt_1, batt_2, batt_3, batt_4, \
+    timestamp, throttle, brake, motor_temp, batt_1, batt_2, batt_3, batt_4, \
         amp_hours, voltage, current, speed, miles, GPS_x, GPS_y = IN_data
 
     # Interpret nan as NULL in the database
-    for var in [throttle, brake_pedal, motor_temp, batt_1, batt_2, batt_3, batt_4,
+    for var in [throttle, brake, motor_temp, batt_1, batt_2, batt_3, batt_4,
                 amp_hours, voltage, current, speed, miles, GPS_x, GPS_y]:
         if var == float('nan'):
             var = None
 
     # Insert the data into the database
     values = [
-         timestamp, throttle, brake_pedal, motor_temp, batt_1, batt_2, batt_3, batt_4, \
+         timestamp, throttle, brake, motor_temp, batt_1, batt_2, batt_3, batt_4, \
          amp_hours, voltage, current, speed, miles, GPS_x, GPS_y
     ]
     cur.execute(insert_data_sql, values)
