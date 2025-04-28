@@ -34,15 +34,6 @@ print('Connected to socket:', SOCKETPATH)
 
 lastSocketDump = [None] * 15  # * Data columns
 
-# Get the latest table
-con = sqlite3.connect(dbpath)
-cur = con.cursor()
-cur.execute("SELECT name FROM sqlite_master WHERE type='table' AND name LIKE 'hhs_%' ORDER BY name DESC LIMIT 1")
-table_name = cur.fetchone()[0]
-print("Reading from table:", table_name)
-con.close()
-
-
 # Page to serve a json with data
 @app.route("/getdata")
 def getdata():
@@ -109,7 +100,7 @@ def usrauth():
 
 
 def calc_pace(cur):
-    global targetlaptime, capBudget, laptime, whenracestarted, laps, table_name
+    global targetlaptime, capBudget, laptime, whenracestarted, laps
 
     ### Calculate target lap time ###
     # (What speed we need to go to use our whole battery in an hour
@@ -118,25 +109,25 @@ def calc_pace(cur):
         # Take the average of speed and current for 5 second groups
         cur.execute("""
             SELECT AVG(speed)
-            FROM {}
+            FROM main
             WHERE time > ?
                 AND laps = ?
                 AND current BETWEEN 17.5 AND 18.5
-        """.format(table_name), [whenracestarted, laps - 1])
+        """, [whenracestarted, laps - 1])
         optimalSpeed = cur.fetchone()[0]
 
         # Find average speed over the last lap
-        cur.execute(f"""
+        cur.execute("""
             SELECT AVG(speed)
-            FROM {table_name}
+            FROM main
             WHERE time > (
                 SELECT MAX(time)
-                FROM {table_name}
+                FROM main
                 WHERE time > ? AND laps = ?
             )
             AND time <= (
                 SELECT MAX(time)
-                FROM {table_name}
+                FROM main
                 WHERE time > ? AND laps = ?
             )
         """, (whenracestarted, laps - 1, whenracestarted, laps))
@@ -145,8 +136,8 @@ def calc_pace(cur):
         # Get the "authoritative" lap time based on the database
         cur.execute("""
             SELECT MAX(time) - MIN(time)
-            FROM {}
-            WHERE time > ? AND laps IS NULL""".format(table_name), [whenracestarted])
+            FROM main
+            WHERE time > ? AND laps IS NULL""", [whenracestarted])
         laptime = cur.fetchone()[0]
 
         # Calculate lap distance (miles)
@@ -167,7 +158,7 @@ def calc_pace(cur):
 # Respond to an updated variable
 @app.route("/usrupdate", methods=['POST'])
 def usrupdate():
-    global authedusrs, laps, laptime, prevlaptimes, racing, whenracestarted, targetlaptime, capBudget, table_name
+    global authedusrs, laps, laptime, prevlaptimes, racing, whenracestarted, targetlaptime, capBudget
 
     # Check if the user is authenticated
     if request.remote_addr in authedusrs:
@@ -181,8 +172,8 @@ def usrupdate():
                 calc_pace(cur)
 
                 # Store the previous lap number in the database
-                cur.execute("UPDATE {} SET laps = ? WHERE time > ? AND laps IS NULL".format(table_name),
-                            [whenracestarted, laps])
+                cur.execute("UPDATE main SET laps = ? WHERE time > ? AND laps IS NULL"
+                ,[whenracestarted, laps])
                 con.commit()
 
                 # Increment the lap number
@@ -197,8 +188,8 @@ def usrupdate():
 
                 if laps > 0:
                     # Remove all instances of the lap count
-                    cur.execute("UPDATE {} SET laps = NULL WHERE time > ? AND laps = ?".format(table_name),
-                                (whenracestarted, laps,))
+                    cur.execute("UPDATE main SET laps = NULL WHERE time > ? AND laps = ?"
+                                ,(whenracestarted, laps,))
                     con.commit()
 
                     laps -= 1
@@ -228,7 +219,7 @@ def usrupdate():
                 else:
                     racing = True
 
-                    cur.execute("SELECT MAX(time) FROM " + table_name)
+                    cur.execute("SELECT MAX(time) FROM main")
                     whenracestarted = cur.fetchone()[0]
 
                     return ('', 200)

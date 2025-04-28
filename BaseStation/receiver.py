@@ -48,13 +48,9 @@ radio = CC1101("/dev/cc1101.0.0", rx_config, blocking=True) # blocking=True mean
 con = sqlite3.connect("BaseStation/EVGPTelemetry.sqlite")
 cur = con.cursor()
 
-# Define the name of today's table
-table_name = "hhs_" + datetime.now().strftime("%Y_%m_%d")
-print("Today's table name is:", table_name)
-
-# If table_name does not exist as a table, create it
+# If main table does not exist as a table, create it
 create_table_sql = f"""
-    CREATE TABLE IF NOT EXISTS {table_name} (
+    CREATE TABLE IF NOT EXISTS main (
     time REAL UNIQUE PRIMARY KEY,
     Throttle REAL,
     Brake_Pedal REAL,
@@ -77,7 +73,7 @@ cur.execute(create_table_sql)
 con.commit()
 
 insert_data_sql = f"""
-    INSERT INTO {table_name} (
+    INSERT INTO main (
         time, Throttle, Brake_Pedal, Motor_temp, Battery_1, Battery_2, Battery_3, Battery_4,
         ca_AmpHrs, ca_Voltage, ca_Current, ca_Speed, ca_Miles, GPS_X, GPS_Y
     ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
