@@ -9,6 +9,8 @@ import os
 from cc1101 import CC1101 # type: ignore
 from cc1101.config import RXConfig, Modulation # type: ignore
 
+prev_values = [None] * 15
+
 SOCKETPATH = "/tmp/telemSocket"
 
 # Remove existing socket file if it exists
@@ -123,6 +125,13 @@ while True:
     cur.execute(insert_data_sql, values)
     con.commit()
 
+    # If a variable in values is None, replace it with what it was last
+    for i in range(len(values)):
+        if values[i] is None:
+            values[i] = prev_values[i]
+
     # Pickle the socket data and send it
     data = pickle.dumps(values)
     sock.sendall(data)
+
+    prev_values = values
