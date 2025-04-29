@@ -1,6 +1,6 @@
-User:     "data"
+User:     "basestation"
 Password: "evgp"
-hostname: "data.local"
+hostname: "basestation.local"
 
 Software needed:
-    With pip: python-cc1101, Flask
+    With pip: python-cc1101, Flask, waitress
