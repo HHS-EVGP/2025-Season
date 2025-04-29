@@ -72,6 +72,20 @@ create_table_sql = f"""
 cur.execute(create_table_sql)
 con.commit()
 
+# Create individual views for each existing day if they do not exist
+create_view_sql = """SELECT 
+    'CREATE VIEW IF NOT EXISTS ' || day || ' AS SELECT * FROM main WHERE strftime(''%Y_%m_%d'', datetime(time, ''unixepoch'')) = ''' || day || ''';'
+        FROM (
+            SELECT DISTINCT strftime('%Y_%m_%d', datetime(time_column, 'unixepoch')) AS day
+            FROM main
+        )
+        WHERE day NOT IN (
+            SELECT name FROM sqlite_master WHERE type='view'
+        );
+        """
+cur.execute(create_view_sql)
+con.commit()
+
 insert_data_sql = f"""
     INSERT INTO main (
         time, Throttle, Brake_Pedal, Motor_temp, Battery_1, Battery_2, Battery_3, Battery_4,
