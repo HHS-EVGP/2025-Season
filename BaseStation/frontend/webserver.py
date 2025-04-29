@@ -161,84 +161,84 @@ def usrupdate():
     global authedusrs, laps, laptime, prev_laptimes, racing, when_race_started, target_laptime, capacity_budget, max_gps_points
 
     # Check if the user is authenticated
-    if request.remote_addr in authedusrs:
-        command = request.get_data(as_text=True)
-
-        if command:
-            con = sqlite3.connect(dbpath)
-            cur = con.cursor()
-
-            if command == 'lap+' and racing:
-                calc_pace(cur)
-
-                # Store the previous lap number in the database
-                cur.execute("UPDATE main SET laps = ? WHERE time > ? AND laps IS NULL"
-                ,[laps, when_race_started])
-                con.commit()
-
-                # Find the number of data points in the last lap, and use that to know when to expire points in the scatter plot
-                cur.execute("""
-                    SELECT COUNT(*)
-                    FROM main
-                    WHERE laps = ?"""
-                        ,laps)
-                max_gps_points = cur.fetchone()[0]
-
-                # Increment the lap number
-                laps += 1
-                if laptime is not None:
-                    prev_laptimes.append(laptime)
-                laptime = 0
-
-                return ('', 200)
-
-            elif command == 'lap-' and racing:
-
-                if laps > 0:
-                    # Remove all instances of the lap count
-                    cur.execute("UPDATE main SET laps = NULL WHERE time > ? AND laps = ?"
-                                ,(when_race_started, laps,))
-                    con.commit()
-
-                    laps -= 1
-
-                    # Revert the current pace to the previous lap time
-                    calc_pace(cur)
-
-                    # Remove the previous lap time from the list
-                    prev_laptimes.pop()
-
-                return ('', 200)
-
-            elif command == 'togglerace':
-                if racing:
-                    racing = False
-
-                    # Reset to default values
-                    laps = 0
-                    laptime = None
-                    prev_laptimes = []
-                    target_laptime = None
-                    when_race_started = None
-                    capacity_budget = None
-
-                    return ('', 200)
-
-                else:
-                    racing = True
-
-                    cur.execute("SELECT MAX(time) FROM main")
-                    when_race_started = cur.fetchone()[0]
-
-                    return ('', 200)
-
-            else:
-                return 'Invalid variable update command', 400
-        else:
-            return 'No variable update command', 400
-    else:
+    if request.remote_addr not in authedusrs:
         return 'User not authenticated', 401
+    
+    command = request.get_data(as_text=True)
 
+    # Check for command
+    if not command:
+        return 'No variable update command', 400
+    
+    con = sqlite3.connect(dbpath)
+    cur = con.cursor()
+
+    if command == 'lap+' and racing:
+        calc_pace(cur)
+
+        # Store the previous lap number in the database
+        cur.execute("UPDATE main SET laps = ? WHERE time > ? AND laps IS NULL"
+        ,[laps, when_race_started])
+        con.commit()
+
+        # Find the number of data points in the last lap, and use that to know when to expire points in the scatter plot
+        cur.execute("""
+            SELECT COUNT(*)
+            FROM main
+            WHERE laps = ?"""
+                ,laps)
+        max_gps_points = cur.fetchone()[0]
+
+        # Increment the lap number
+        laps += 1
+        if laptime is not None:
+            prev_laptimes.append(laptime)
+        laptime = 0
+
+        return ('', 200)
+
+    elif command == 'lap-' and racing:
+
+        if laps > 0:
+            # Remove all instances of the lap count
+            cur.execute("UPDATE main SET laps = NULL WHERE time > ? AND laps = ?"
+                        ,(when_race_started, laps,))
+            con.commit()
+
+            laps -= 1
+
+            # Revert the current pace to the previous lap time
+            calc_pace(cur)
+
+            # Remove the previous lap time from the list
+            prev_laptimes.pop()
+
+        return ('', 200)
+
+    elif command == 'togglerace':
+        if racing:
+            racing = False
+
+            # Reset to default values
+            laps = 0
+            laptime = None
+            prev_laptimes = []
+            target_laptime = None
+            when_race_started = None
+            capacity_budget = None
+
+            return ('', 200)
+
+        else:
+            racing = True
+
+            cur.execute("SELECT MAX(time) FROM main")
+            when_race_started = cur.fetchone()[0]
+
+            return ('', 200)
+
+    else:
+        return 'Invalid variable update command', 400
 
 # Main Dashboard page
 @app.route("/")

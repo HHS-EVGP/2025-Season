@@ -169,52 +169,55 @@ def UART_GPS():
     # $GPRMC documentation: https://docs.novatel.com/OEM7/Content/Logs/GPRMC.htm
     try:
         data = read_from_uart(GPS704_ADDR, 128)  # GPS data length can be longer (up to 255 bytes)
-        if data:
-
-            data = data.strip()
-            if "$GPRMC" not in data:
-                print("No $GPRMC found")
-                GPS_x = GPS_y = float('nan')
-                return GPS_x, GPS_y
-
-            data = data.split("$GPRMC")[1]
-            data = data.split("\r\n")[0]
-
-            timestamp, pos_status, lat, lat_dir, lon, lon_dir, speed, track_true, date, \
-                mag_var, var_dir, mod_ind, checksum = data.split(',')
-
-            # If no GPS fix, return nan for all variables
-            if pos_status == 'V':
-                print("No GPS fix!!!")
-                GPS_x = GPS_y = float('nan')
-                return GPS_x, GPS_y
-
-            # Set System time to gps time if not done yet
-            if not OnGPStime:
-                set_system_time(timestamp, date)
-
-            # Convert latitude and longitude to decimal degrees
-            lat = float(lat[:2]) + float(lat[2:]) / 60.0
-            if lat_dir == 'S':
-                lat = -lat
-
-            lon = float(lon[:3]) + float(lon[3:]) / 60.0
-            if lon_dir == 'W':
-                lon = -lon
-
-            # Convert decimal degrees to radians
-            lat = math.radians(lat)
-            lon = math.radians(lon)
-
-            # The IAU nominal "zero tide" equatorial radius of the Earth
-            R = 6378100
-
-            # Convert to Cartesian coordinates
-            GPS_x = R * math.cos(lat) * math.cos(lon)
-            GPS_y = R * math.cos(lat) * math.sin(lon)
-
-            # Success!
+        if not data:
+            print("No data received from GPS")
+            GPS_x = GPS_y = float('nan')
             return GPS_x, GPS_y
+
+        data = data.strip()
+        if "$GPRMC" not in data:
+            print("No $GPRMC found")
+            GPS_x = GPS_y = float('nan')
+            return GPS_x, GPS_y
+
+        data = data.split("$GPRMC")[1]
+        data = data.split("\r\n")[0]
+
+        timestamp, pos_status, lat, lat_dir, lon, lon_dir, speed, track_true, date, \
+            mag_var, var_dir, mod_ind, checksum = data.split(',')
+
+        # If no GPS fix, return nan for all variables
+        if pos_status == 'V':
+            print("No GPS fix!!!")
+            GPS_x = GPS_y = float('nan')
+            return GPS_x, GPS_y
+
+        # Set System time to gps time if not done yet
+        if not OnGPStime:
+            set_system_time(timestamp, date)
+
+        # Convert latitude and longitude to decimal degrees
+        lat = float(lat[:2]) + float(lat[2:]) / 60.0
+        if lat_dir == 'S':
+            lat = -lat
+
+        lon = float(lon[:3]) + float(lon[3:]) / 60.0
+        if lon_dir == 'W':
+            lon = -lon
+
+        # Convert decimal degrees to radians
+        lat = math.radians(lat)
+        lon = math.radians(lon)
+
+        # The IAU nominal "zero tide" equatorial radius of the Earth
+        R = 6378100
+
+        # Convert to Cartesian coordinates
+        GPS_x = R * math.cos(lat) * math.cos(lon)
+        GPS_y = R * math.cos(lat) * math.sin(lon)
+
+        # Success!
+        return GPS_x, GPS_y
 
     except Exception as e:
         print(f"Error in UART_GPS function: {e}")
@@ -231,8 +234,6 @@ def thermistor(idx):
     T = T - 273.15  # Convert from Kelvin to Celsius
     T = (T * 9.0) / 5.0 + 32.0  # Convert from Celsius to Fahrenheit
     return T
-
-# TODO (not important) put the try-except in thermistor()
 
 def analogPull():
     # Throttle Value
