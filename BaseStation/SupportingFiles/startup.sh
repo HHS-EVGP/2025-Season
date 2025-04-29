@@ -1,5 +1,5 @@
 #!/bin/bash
-source /home/basestation/frontent/flaskenv/bin/activate
-python /home/basestation/receiver.py
+source /home/basestation/env/bin/activate
+python /home/basestation/receiver.py &  # run in background
 sleep 1
-python /home/basestation/frontend/webvserver.py
+python /home/basestation/frontend/webserver.py

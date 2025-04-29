@@ -55,7 +55,7 @@ sock.sendall(data)
 # radio = CC1101("/dev/cc1101.0.0", rx_config, blocking=True) # blocking=True means program will wait for a packet to be received
 
 # Link the database to the python cursor
-con = sqlite3.connect("BaseStation/EVGPTelemetry.sqlite")
+con = sqlite3.connect("EVGPTelemetry.sqlite")
 cur = con.cursor()
 
 # If main table does not exist as a table, create it
@@ -86,7 +86,7 @@ con.commit()
 create_view_sql = """SELECT 
     'CREATE VIEW IF NOT EXISTS ' || day || ' AS SELECT * FROM main WHERE strftime(''%Y_%m_%d'', datetime(time, ''unixepoch'')) = ''' || day || ''';'
         FROM (
-            SELECT DISTINCT strftime('%Y_%m_%d', datetime(time_column, 'unixepoch')) AS day
+            SELECT DISTINCT strftime('%Y_%m_%d', datetime(time, 'unixepoch')) AS day
             FROM main
         )
         WHERE day NOT IN (
@@ -105,7 +105,7 @@ insert_data_sql = f"""
 
 while True:
     
-    IN_data = []
+    # IN_data = []
 
     # Receive the next packets
     # packets = radio.receive() # Packets are only received if they pass the checksum

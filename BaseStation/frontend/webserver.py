@@ -1,6 +1,5 @@
 from flask import Flask, render_template, jsonify, request
 import waitress
-import time
 import sqlite3
 from datetime import datetime
 
@@ -11,7 +10,7 @@ import pickle
 app = Flask(__name__)
 
 ## Global variables ##
-dbpath = "BaseStation/EVGPTelemetry.sqlite"
+dbpath = "/home/basestation/EVGPTelemetry.sqlite"
 authedusrs = []
 authcode = "hhsevgp"  # Make this whatever you like
 
@@ -186,7 +185,7 @@ def usrupdate():
             SELECT COUNT(*)
             FROM main
             WHERE laps = ?"""
-                ,laps)
+                ,[laps])
         max_gps_points = cur.fetchone()[0]
 
         # Increment the lap number
