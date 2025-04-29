@@ -39,7 +39,7 @@ rx_config = RXConfig.new(
     sync_word=0xD391, # Unique 16-bit sync word (Happens to be unicode for 펑 :) )
     preamble_length=4, # Recommended: https://e2e.ti.com/support/wireless-connectivity/sub-1-ghz-group/sub-1-ghz/f/sub-1-ghz-forum/1027627/cc1101-preamble-sync-word-quality
     packet_length=120, # In Bytes (Number of columns * 8)
-    tx_power=0.1, # dBm
+    carrier_sense=+6, # Reception sensitivity https://github.com/28757B2/cc1101-python?tab=readme-ov-file#--carrier-sense
     crc=True, # Enable a checksum
 )
 radio = CC1101("/dev/cc1101.0.0", rx_config, blocking=True) # blocking=True means program will wait for a packet to be received
