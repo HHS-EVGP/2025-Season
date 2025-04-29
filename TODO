@@ -1,20 +1,10 @@
-Season Master Todolist:
-
-General:  
-  -Add live and Post analysys `software
-    -Calculate optimal lap/section time
+General:
+  -Improve strategy methodology
   -Make a mobile app to define track boundaries
 
-Car:
-  -Set up a new Pi
+GET IT WORKING:
+  - !!!Debug the crap out of frontend!!!
 
-    RasPi OS Lite 64-bit for RasPI 3b+
-    Username: Car
-    Hostname: carpi.local
-
-    Install with pip: adafruit-circuitpython-ads1x15, Adafruit-ADS1x15, adafruit-circuitpython-lsm6ds, pyserial
-    Install with apt: dos2unix
-
-    Commands:
-      Install: pip3 install adafruit-circuitpython-ads1x15 Adafruit-ADS1x15 adafruit-circuitpython-lsm6ds pyserial && sudo apt install -y dos2unix 
-      Verify: sudo systemctl status transmit.service code_check.service buttons.service (I don't think you usually need to be root to do this, but I will leave it as is to be safe)
+  Later:
+  - Rverse ifs
+  - Create db views

@@ -115,19 +115,19 @@ function updateData() {
     .then(data => {
 
       // Statuses
-      document.getElementById('systime').textContent = data.systime ?? 'XXX';
-      document.getElementById('timestamp').textContent = data.timestamp ?? 'XXX';
+      document.getElementById('systime').textContent = data.systime ?? 'NNN';
+      document.getElementById('timestamp').textContent = data.timestamp ?? 'NNN';
 
       // Update the throttle and brake chart
       window.throttleBrakeChart.data.datasets[0].data = [data.throttle ?? 0, data.brake_pedal ?? 0];
       window.throttleBrakeChart.update();
 
       // Temperatures
-      document.getElementById('motor_temp').textContent = data.motor_temp ?? 'XXX';
-      document.getElementById('batt_1').textContent = data.batt_1 ?? 'XXX';
-      document.getElementById('batt_2').textContent = data.batt_2 ?? 'XXX';
-      document.getElementById('batt_3').textContent = data.batt_3 ?? 'XXX';
-      document.getElementById('batt_4').textContent = data.batt_4 ?? 'XXX';
+      document.getElementById('motor_temp').textContent = data.motor_temp ?? 'NNN';
+      document.getElementById('batt_1').textContent = data.batt_1 ?? 'NNN';
+      document.getElementById('batt_2').textContent = data.batt_2 ?? 'NNN';
+      document.getElementById('batt_3').textContent = data.batt_3 ?? 'NNN';
+      document.getElementById('batt_4').textContent = data.batt_4 ?? 'NNN';
 
       // Check if any temperature is above 50 degrees and turn them red
       ['motor_temp', 'batt_1', 'batt_2', 'batt_3', 'batt_4'].forEach(id => {
@@ -141,19 +141,19 @@ function updateData() {
       });
 
       // General
-      document.getElementById('amp_hours').textContent = data.amp_hours ?? 'XXX.XXX';
-      document.getElementById('voltage').textContent = data.voltage ?? 'XXX';
-      document.getElementById('current').textContent = data.current ?? 'XXX';
-      document.getElementById('speed').textContent = data.speed ?? 'XXX';
-      document.getElementById('miles').textContent = data.miles ?? 'XXX.XXX';
+      document.getElementById('amp_hours').textContent = data.amp_hours ?? 'NNN.NNN';
+      document.getElementById('voltage').textContent = data.voltage ?? 'NNN';
+      document.getElementById('current').textContent = data.current ?? 'NNN';
+      document.getElementById('speed').textContent = data.speed ?? 'NNN';
+      document.getElementById('miles').textContent = data.miles ?? 'NNN.NNN';
 
       // Laps and pace
       document.getElementById('laps').textContent = data.laps ?? 'XX';
-      document.getElementById('laptime').textContent = data.laptime ?? 'XXX';
-      document.getElementById('targetlaptime').textContent = data.targetlaptime ?? 'XXX';
+      document.getElementById('laptime').textContent = data.laptime ?? 'NNN';
+      document.getElementById('targetlaptime').textContent = data.targetlaptime ?? 'NNN';
 
       //Amp hours remaining in lap
-      document.getElementById('capBudget').textContent = data.capBudget ?? 'XXX.XXX';
+      document.getElementById('capbudget').textContent = data.capbudget ?? 'NNN.NNN';
 
       // Start/stop race button
       const racing = data.racing ?? false;
@@ -165,8 +165,8 @@ function updateData() {
       }
 
       // GPS
-      document.getElementById('GPS_x').textContent = data.GPS_x ?? 'XXX';
-      document.getElementById('GPS_y').textContent = data.GPS_y ?? 'XXX';
+      document.getElementById('GPS_x').textContent = data.GPS_x ?? 'NNN';
+      document.getElementById('GPS_y').textContent = data.GPS_y ?? 'NNN';
 
       // Update scatter plot with new gps data
       window.gpsChart.data.datasets[0].data.push({
