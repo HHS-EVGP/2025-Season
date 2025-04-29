@@ -18,7 +18,8 @@ import sqlite3
 
 print("I guess all of the packages loaded! (:")
 
-OnGPStime = False
+On_GPS_time = False
+send_cooldown = 2 # With data pulling 4x a second, sending rf 2x a second
 
 # Connect to the car's database
 con = sqlite3.connect('./CarTelemetry.sqlite')
@@ -158,8 +159,8 @@ def set_system_time(timestamp, date):
     subprocess.run(["sudo date -s", formatted_time], check=True)
     print("System time sucessfully set to GPS time:", formatted_time)
 
-    global OnGPStime
-    OnGPStime = True
+    global On_GPS_time
+    On_GPS_time = True
 
 
 # UART handler for GPS
@@ -193,7 +194,7 @@ def UART_GPS():
             return GPS_x, GPS_y
 
         # Set System time to gps time if not done yet
-        if not OnGPStime:
+        if not On_GPS_time:
             set_system_time(timestamp, date)
 
         # Convert latitude and longitude to decimal degrees
@@ -292,6 +293,9 @@ def mainloop():
     while True:
         data_2_send = b''
 
+        global send_cooldown
+        send_cooldown -= 1
+
         # Get Data
         timestamp = time.time()
         amp_hours, voltage, current, speed, miles = UART_CA()
@@ -306,21 +310,25 @@ def mainloop():
         # Add data to the database:
         cur.execute(insert_data_sql, data)
         con.commit()
+        print("Logged Data")
 
-        try:
-            # Encode Data
-            for var in data:
-                data_2_send += struct.pack('<d', var)
+        if send_cooldown == 0:
+            try:
+                # Encode Data
+                for var in data:
+                    data_2_send += struct.pack('<d', var)
 
-            # Send Data
-            GPIO.output(sendLED, 1)
-            radio.transmit(tx_config, data_2_send)
-            GPIO.output(sendLED, 0)
-            print("Packet sent")
+                # Send Data
+                GPIO.output(sendLED, 1)
+                radio.transmit(tx_config, data_2_send)
+                GPIO.output(sendLED, 0)
+                print("Packet sent")
 
-        except Exception as e:
-            print("Error sending data:", e)
+            except Exception as e:
+                print("Error sending data:", e)
         
+            send_cooldown = 2
+
         time.sleep(0.25)
 
 
