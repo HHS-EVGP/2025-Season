@@ -50,9 +50,24 @@ CREATE TABLE IF NOT EXISTS main (
     batt_3 REAL,
     batt_4 REAL,
     GPS_x REAL,
-    GPS_y REAL
+    GPS_y REAL,
+    laps, NUMERIC
 )
 ''')
+con.commit()
+
+# Create individual views for each existing day if they do not exist
+create_view_sql = """SELECT 
+    'CREATE VIEW IF NOT EXISTS ' || day || ' AS SELECT * FROM main WHERE strftime(''%Y_%m_%d'', datetime(time, ''unixepoch'')) = ''' || day || ''';'
+        FROM (
+            SELECT DISTINCT strftime('%Y_%m_%d', datetime(time, 'unixepoch')) AS day
+            FROM main
+        )
+        WHERE day NOT IN (
+            SELECT name FROM sqlite_master WHERE type='view'
+        );
+        """
+cur.execute(create_view_sql)
 con.commit()
 
 # tx_config = TXConfig.new(
