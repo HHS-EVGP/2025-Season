@@ -19,10 +19,10 @@ function startCharts() {
         data: {
           labels: ['Throttle', 'Brake Pedal'],
           datasets: [{
-            data: [data.throttle ?? 0, data.brake_pedal ?? 0],
-            backgroundColor: ['rgba(68, 192, 95, 0.75)', 'rgba(245, 90, 90, 0.75)'],
-            borderColor: ['rgb(68, 192, 95)', 'rgb(245, 90, 90)'],
-            borderWidth: 1
+        data: [data.throttle ?? 0, data.brake_pedal ?? 0],
+        backgroundColor: ['rgba(68, 192, 95, 0.75)', 'rgba(255, 0, 0, 0.75)'],
+        borderColor: ['rgb(68, 192, 95)', 'rgb(255, 0, 0)'],
+        borderWidth: 1
           }]
         },
         options: {
@@ -30,21 +30,22 @@ function startCharts() {
           animation: false,
           indexAxis: 'y',
           plugins: {
-            legend: {
-              display: false
-            }
+        legend: {
+          display: false
+        }
           },
           scales: {
-            x: {
-              beginAtZero: true
-            },
-            y: {
-              ticks: {
-                font: {
-                  size: 16 // Adjust the font size for the labels
-                }
-              }
+        x: {
+          beginAtZero: true,
+          max: 32000, // Set the maximum value for the x-axis
+        },
+        y: {
+          ticks: {
+            font: {
+          size: 16 // Adjust the font size for the labels
             }
+          }
+        }
           }
         }
       });
