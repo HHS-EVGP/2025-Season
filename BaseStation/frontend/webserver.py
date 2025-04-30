@@ -33,6 +33,13 @@ print('Connected to socket:', SOCKETPATH)
 
 lastSocketDump = [None] * 15  # * Data columns
 
+# Function to clean up data for display
+def clean_view(var):
+    if var is not None:
+        var = round(var, 3)
+        var = format(var, ".3f") # Add trailing zeros to ensure lenth stays the same
+    return var
+
 # Page to serve a json with data
 @app.route("/getdata")
 def getdata():
@@ -60,26 +67,26 @@ def getdata():
 
     return jsonify(
         systime=datetime.now().strftime("%H:%M:%S"),
-        timestamp=timestamp,
-        throttle=throttle,
-        brake_pedal=brake_pedal,
-        motor_temp=motor_temp,
-        batt_1=batt_1,
-        batt_2=batt_2,
-        batt_3=batt_3,
-        batt_4=batt_4,
-        amp_hours=amp_hours,
-        voltage=voltage,
-        current=current,
-        speed=speed,
-        miles=miles,
-        GPS_x=GPS_x,
-        GPS_y=GPS_y,
+        timestamp=clean_view(timestamp),
+        throttle=clean_view(throttle),
+        brake_pedal=clean_view(brake_pedal),
+        motor_temp=clean_view(motor_temp),
+        batt_1=clean_view(batt_1),
+        batt_2=clean_view(batt_2),
+        batt_3=clean_view(batt_3),
+        batt_4=clean_view(batt_4),
+        amp_hours=clean_view(amp_hours),
+        voltage=clean_view(voltage),
+        current=clean_view(current),
+        speed=clean_view(speed),
+        miles=clean_view(miles),
+        GPS_x=clean_view(GPS_x),
+        GPS_y=clean_view(GPS_y),
         laps=laps,
-        laptime=round(laptime, 2) if laptime is not None else None,
+        laptime=clean_view(laptime),
         maxgpspoints=max_gps_points,
-        targetlaptime=target_laptime,
-        capbudget=capacity_budget,
+        targetlaptime=clean_view(target_laptime),
+        capbudget=clean_view(capacity_budget),
         racing=racing
     )
 
