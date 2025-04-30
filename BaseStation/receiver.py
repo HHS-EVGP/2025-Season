@@ -1,10 +1,12 @@
 import sqlite3
 from datetime import datetime
 import struct
+import math
 
 import socket
 import pickle
 import os
+
 import busio # type: ignore
 import time
 import board # type: ignore
@@ -31,7 +33,7 @@ server.bind(SOCKETPATH)
 server.listen(1)
 
 print("Server is waiting for connection...")
-sock, _ = server.accept()
+sock, _ = server.accept() # Is blocking untill client connected
 print("Client connected.")
 
 # Initialize the socket data
@@ -148,17 +150,15 @@ while True:
     # timestamp, throttle, brake, motor_temp, batt_1, batt_2, batt_3, batt_4, \
     #     amp_hours, voltage, current, speed, miles, GPS_x, GPS_y = IN_data
 
-    # Interpret nan as NULL in the database
-    for var in [throttle, brake, motor_temp, batt_1, batt_2, batt_3, batt_4,
-                amp_hours, voltage, current, speed, miles, GPS_x, GPS_y]:
-        if var == float('nan'):
-            var = None
-
-    # Insert the data into the database
     values = [
          timestamp, throttle, brake, motor_temp, batt_1, batt_2, batt_3, batt_4,
          amp_hours, voltage, current, speed, miles, GPS_x, GPS_y
     ]
+
+    # If a value is nan, replace it with None
+    values = [None if math.isnan(x) else x for x in values]
+
+    # Insert the data into the database
     cur.execute(insert_data_sql, values)
     con.commit()
 
