@@ -61,25 +61,26 @@ con = sqlite3.connect("EVGPTelemetry.sqlite")
 cur = con.cursor()
 
 # If main table does not exist as a table, create it
-create_table_sql = f"""
+create_table_sql = """
     CREATE TABLE IF NOT EXISTS main (
     time REAL UNIQUE PRIMARY KEY,
-    Throttle REAL,
-    Brake_Pedal REAL,
-    Motor_temp REAL,
-    Battery_1 REAL,
-    Battery_2 REAL,
-    Battery_3 REAL,
-    Battery_4 REAL,
-    ca_AmpHrs REAL,
-    ca_Voltage REAL,
-    ca_Current REAL,
-    ca_Speed REAL,
-    ca_Miles REAL,
-    GPS_X REAL,
-    GPS_Y REAL,
+    amp_hours REAL,
+    voltage REAL,
+    current REAL,
+    speed REAL,
+    miles REAL,
+    throttle REAL,
+    brake REAL,
+    motor_temp REAL,
+    batt_1 REAL,
+    batt_2 REAL,
+    batt_3 REAL,
+    batt_4 REAL,
+    GPS_x REAL,
+    GPS_y REAL,
     laps NUMERIC
-)"""
+)
+"""
 
 cur.execute(create_table_sql)
 con.commit()
@@ -95,8 +96,8 @@ create_view_sql = """SELECT
             SELECT name FROM sqlite_master WHERE type='view'
         );
         """
-cur.execute(create_view_sql)
-con.commit()
+#cur.execute(create_view_sql) # Get this working
+#con.commit()
 
 insert_data_sql = f"""
     INSERT INTO main (
