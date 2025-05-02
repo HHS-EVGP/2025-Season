@@ -19,10 +19,10 @@ function startCharts() {
         data: {
           labels: ['Throttle', 'Brake Pedal'],
           datasets: [{
-        data: [data.throttle ?? 0, data.brake_pedal ?? 0],
-        backgroundColor: ['rgba(68, 192, 95, 0.75)', 'rgba(255, 0, 0, 0.75)'],
-        borderColor: ['rgb(68, 192, 95)', 'rgb(255, 0, 0)'],
-        borderWidth: 1
+            data: [data.throttle ?? 0, data.brake_pedal ?? 0],
+            backgroundColor: ['rgba(68, 192, 95, 0.75)', 'rgba(255, 0, 0, 0.75)'],
+            borderColor: ['rgb(68, 192, 95)', 'rgb(255, 0, 0)'],
+            borderWidth: 1
           }]
         },
         options: {
@@ -30,22 +30,22 @@ function startCharts() {
           animation: false,
           indexAxis: 'y',
           plugins: {
-        legend: {
-          display: false
-        }
+            legend: {
+              display: false
+            }
           },
           scales: {
-        x: {
-          beginAtZero: true,
-          max: 32000, // Set the maximum value for the x-axis
-        },
-        y: {
-          ticks: {
-            font: {
-          size: 16 // Adjust the font size for the labels
+            x: {
+              beginAtZero: true,
+              max: 1000, // Set the maximum value for the x-axis
+            },
+            y: {
+              ticks: {
+                font: {
+                  size: 16 // Adjust the font size for the labels
+                }
+              }
             }
-          }
-        }
           }
         }
       });
@@ -53,14 +53,17 @@ function startCharts() {
       const ctx = document.getElementById('gpsplot');
 
       window.gpsChart = new Chart(ctx, {
-        type: 'scatter',
+        type: 'line',
         data: {
           datasets: [{
             data: [{
               x: data.GPS_x,
               y: data.GPS_y
             }],
-            backgroundColor: 'rgb(54, 67, 126)'
+            backgroundColor: 'rgb(54, 67, 126)',
+            borderColor: 'rgb(54, 67, 126)', // Set line color
+            fill: false, // Disable filling under the line
+            tension: 1 // Line smoothness (0 for straight lines)
           }]
         },
         options: {
@@ -71,6 +74,12 @@ function startCharts() {
             }
           },
           animation: false,
+          scales: {
+            x: {
+              type: 'linear', // Ensure x-axis is linear for scatter data
+              position: 'bottom'
+            }
+          }
         }
       });
     });
@@ -84,19 +93,19 @@ function authenticateLapControls(code) {
     body: code,
   })
 
-  .then(response => {
-    if (response.status == 200) {
-      document.getElementById('lapcontrols').style.display = 'block';
-      document.getElementById('authlapcontrols').style.display = 'none';
-    }
-    else if (response.status == 401) {
-      new bootstrap.Modal(document.getElementById('lapauthmodal')).show();
-      document.getElementById('autherror').style.display = 'block';
-    }
-    else {
-      console.error('Unknown Auth Error:', response);
-    }
-  });
+    .then(response => {
+      if (response.status == 200) {
+        document.getElementById('lapcontrols').style.display = 'block';
+        document.getElementById('authlapcontrols').style.display = 'none';
+      }
+      else if (response.status == 401) {
+        new bootstrap.Modal(document.getElementById('lapauthmodal')).show();
+        document.getElementById('autherror').style.display = 'block';
+      }
+      else {
+        console.error('Unknown Auth Error:', response);
+      }
+    });
 }
 
 

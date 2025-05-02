@@ -2,6 +2,7 @@ from flask import Flask, render_template, jsonify, request
 import waitress
 import sqlite3
 from datetime import datetime
+import time
 
 import socket
 import select
@@ -10,7 +11,7 @@ import pickle
 app = Flask(__name__)
 
 ## Global variables ##
-dbpath = "/home/basestation/EVGPTelemetry.sqlite"
+dbpath = "BaseStation/EVGPTelemetry.sqlite"
 authedusrs = []
 authcode = "hhsevgp"  # Make this whatever you like
 
@@ -20,6 +21,7 @@ prev_laptimes = []
 
 target_laptime = None
 capacity_budget = None
+last_amp_hours = None
 
 max_gps_points = 300
 racing = False
@@ -35,7 +37,7 @@ lastSocketDump = [None] * 15  # * Data columns
 
 # Function to clean up data for display
 def clean_view(var):
-    if var is not None:
+    if var is not None and var != 'Error':
         var = round(var, 3)
         var = format(var, ".3f") # Add trailing zeros to ensure lenth stays the same
     return var
@@ -43,7 +45,7 @@ def clean_view(var):
 # Page to serve a json with data
 @app.route("/getdata")
 def getdata():
-    global lastSocketDump, laptime, racing, when_race_started, prev_laptimes
+    global lastSocketDump, laptime, racing, when_race_started, prev_laptimes, last_amp_hours, capacity_budget, timestamp
 
     # See if new data is available
     readable, _, _ = select.select([socketConn], [], [], 0)
@@ -58,9 +60,13 @@ def getdata():
     # Unpack the data
     timestamp, throttle, brake_pedal, motor_temp, batt_1, batt_2, batt_3, batt_4, \
         amp_hours, voltage, current, speed, miles, GPS_x, GPS_y = data
+    
+    # Remove the difference of last_amp_hours and amp_hours from capacity_budget
+    if capacity_budget is not None and capacity_budget is not "Error":
+        capacity_budget -= (last_amp_hours - amp_hours)
 
     # Calculate current lap time
-    if racing and timestamp is not None:
+    if racing and timestamp is not None and when_race_started is not None:
         laptime = timestamp - when_race_started - sum(prev_laptimes)
     else:
         laptime = None
@@ -106,44 +112,36 @@ def usrauth():
 
 
 def calc_pace(cur):
-    global target_laptime, capacity_budget, laptime, when_race_started, laps
+    global target_laptime, capacity_budget, laptime, when_race_started, laps, timestamp
+
+    battery_capacity  = 18.5 # Battery limit in amp hours
 
     ### Calculate target lap time ###
-    # (What speed we need to go to use our whole battery in an hour
+    # (What speed we need to go to use our whole battery in an hour)
     try:
-        # Calculate the ratio of speed to current used in previous data
-        # Take the average of speed and current for 5 second groups
+        # Find the average speed where current is close to 18.5
         cur.execute("""
             SELECT AVG(speed)
             FROM main
             WHERE time > ?
-                AND laps = ?
-                AND current BETWEEN 17.5 AND 18.5
-        """, [when_race_started, laps - 1])
+                AND laps = > ?
+                AND current BETWEEN ? AND ?
+        """, [when_race_started, laps - 5, battery_capacity - 0.5, battery_capacity + 0.5]) # Look at the last 5 laps in this race
         optimalSpeed = cur.fetchone()[0]
 
         # Find average speed over the last lap
         cur.execute("""
             SELECT AVG(speed)
             FROM main
-            WHERE time > (
-                SELECT MAX(time)
-                FROM main
-                WHERE time > ? AND laps = ?
-            )
-            AND time <= (
-                SELECT MAX(time)
-                FROM main
-                WHERE time > ? AND laps = ?
-            )
-        """, (when_race_started, laps - 1, when_race_started, laps))
+            WHERE laps = ?
+        """, [laps])
         averageSpeed = cur.fetchone()[0]
 
         # Get the "authoritative" lap time based on the database
         cur.execute("""
             SELECT MAX(time) - MIN(time)
             FROM main
-            WHERE time > ? AND laps IS NULL""", [when_race_started])
+            WHERE time > ? AND laps IS ?""", [when_race_started, laps])
         laptime = cur.fetchone()[0]
 
         # Calculate lap distance (miles)
@@ -153,7 +151,8 @@ def calc_pace(cur):
         target_laptime = lapDistance * (optimalSpeed / 60)
 
         # Calculate the budget for the lap (amp hours)
-        capacity_budget = (target_laptime / 3600) * 18
+        capacity_budget = (((when_race_started + 3600) - timestamp)  / target_laptime) * battery_capacity
+        # Seconds left in the race / target laptime, * battery capacity
 
     except Exception as e:
         print("Error calculating target lap time:", e)
@@ -180,12 +179,12 @@ def usrupdate():
     cur = con.cursor()
 
     if command == 'lap+' and racing:
-        calc_pace(cur)
-
         # Store the previous lap number in the database
         cur.execute("UPDATE main SET laps = ? WHERE time > ? AND laps IS NULL"
         ,[laps, when_race_started])
         con.commit()
+
+        calc_pace(cur)
 
         # Find the number of data points in the last lap, and use that to know when to expire points in the scatter plot
         cur.execute("""
@@ -193,7 +192,7 @@ def usrupdate():
             FROM main
             WHERE laps = ?"""
                 ,[laps])
-        max_gps_points = cur.fetchone()[0]
+        max_gps_points = 2 * cur.fetchone()[0]
 
         # Increment the lap number
         laps += 1
