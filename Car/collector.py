@@ -51,7 +51,7 @@ CREATE TABLE IF NOT EXISTS main (
     batt_4 REAL,
     GPS_x REAL,
     GPS_y REAL,
-    laps, NUMERIC
+    laps NUMERIC
 )
 ''')
 con.commit()
@@ -67,8 +67,8 @@ create_view_sql = """SELECT
             SELECT name FROM sqlite_master WHERE type='view'
         );
         """
-cur.execute(create_view_sql)
-con.commit()
+#cur.execute(create_view_sql) # Get this working
+#con.commit()
 
 # tx_config = TXConfig.new(
 #     frequency=915,
@@ -106,8 +106,8 @@ GPS704_ADDR = 0x29  # Replace with the actual I2C address -- GPS
 # https://chatgpt.com/share/673cbcb7-9a74-8010-9a24-c0a5603eb385
 
 # Setup Analog In Ports
-A0 = AnalogIn(analogA, ADS.P0) # battTemp1 
-A1 = AnalogIn(analogA, ADS.P1) # battTemp2 
+A0 = AnalogIn(analogA, ADS.P0) # battTemp1
+A1 = AnalogIn(analogA, ADS.P1) # battTemp2
 A2 = AnalogIn(analogA, ADS.P2) # battTemp3
 A3 = AnalogIn(analogA, ADS.P3) # battTemp4
 B0 = AnalogIn(analogB, ADS.P0) # motorTemp
@@ -160,10 +160,10 @@ def UART_CA():
                 current = float(current)
                 speed = float(speed)
                 miles = float(miles)
-                
+
                 return amp_hours, voltage, current, speed, miles
         else:
-            
+
             return float('nan'), float('nan'), float('nan'), float('nan'), float('nan')
     except Exception as e:
         print(f"Error in UART_CA function: {e}")
@@ -366,9 +366,10 @@ def mainloop():
                 # radio.transmit(tx_config, data_2_send)
                 GPIO.output(sendLED, 0)
 
+                send_cooldown = 2
+
             except Exception as e:
                 print("Error sending data:", e)
-
         time.sleep(0.25)
 
 
