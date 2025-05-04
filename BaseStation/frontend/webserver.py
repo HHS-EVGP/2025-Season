@@ -60,7 +60,7 @@ def getdata():
     # Unpack the data
     timestamp, throttle, brake_pedal, motor_temp, batt_1, batt_2, batt_3, batt_4, \
         amp_hours, voltage, current, speed, miles, GPS_x, GPS_y = data
-    
+
     # Remove the difference of last_amp_hours and amp_hours from capacity_budget
     if capacity_budget is not None and capacity_budget is not "Error":
         capacity_budget -= (last_amp_hours - amp_hours)
@@ -114,7 +114,7 @@ def usrauth():
 def calc_pace(cur):
     global target_laptime, capacity_budget, laptime, when_race_started, laps, timestamp
 
-    battery_capacity  = 18.5 # Battery limit in amp hours
+    battery_capacity  = 21 # Battery limit in amp hours
 
     ### Calculate target lap time ###
     # (What speed we need to go to use our whole battery in an hour)
@@ -124,7 +124,7 @@ def calc_pace(cur):
             SELECT AVG(speed)
             FROM main
             WHERE time > ?
-                AND laps = > ?
+                AND laps > ?
                 AND current BETWEEN ? AND ?
         """, [when_race_started, laps - 5, battery_capacity - 0.5, battery_capacity + 0.5]) # Look at the last 5 laps in this race
         optimalSpeed = cur.fetchone()[0]
@@ -168,13 +168,13 @@ def usrupdate():
     # Check if the user is authenticated
     if request.remote_addr not in authedusrs:
         return 'User not authenticated', 401
-    
+
     command = request.get_data(as_text=True)
 
     # Check for command
     if not command:
         return 'No variable update command', 400
-    
+
     con = sqlite3.connect(dbpath)
     cur = con.cursor()
 

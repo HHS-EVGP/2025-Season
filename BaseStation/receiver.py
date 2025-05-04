@@ -86,7 +86,7 @@ cur.execute(create_table_sql)
 con.commit()
 
 # Create individual views for each existing day if they do not exist
-create_view_sql = """SELECT 
+create_view_sql = """SELECT
     'CREATE VIEW IF NOT EXISTS ' || day || ' AS SELECT * FROM main WHERE strftime(''%Y_%m_%d'', datetime(time, ''unixepoch'')) = ''' || day || ''';'
         FROM (
             SELECT DISTINCT strftime('%Y_%m_%d', datetime(time, 'unixepoch')) AS day
@@ -101,18 +101,18 @@ create_view_sql = """SELECT
 
 insert_data_sql = f"""
     INSERT INTO main (
-        time, Throttle, Brake_Pedal, Motor_temp, Battery_1, Battery_2, Battery_3, Battery_4,
-        ca_AmpHrs, ca_Voltage, ca_Current, ca_Speed, ca_Miles, GPS_X, GPS_Y
+        time, throttle, brake, Motor_temp, batt_1, batt_2, batt_3, batt_4,
+        amp_hours, voltage, current, speed, miles, GPS_X, GPS_Y
     ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
     """
 
 while True:
-    
+
     # IN_data = []
 
     # Receive the next packets
     # packets = radio.receive() # Packets are only received if they pass the checksum
-    #TODO Radio Recive! 
+    #TODO Radio Recive!
     packet = None
     packet = rfm9x.receive()
 
