@@ -37,7 +37,7 @@ sock, _ = server.accept() # Is blocking untill client connected
 print("Client connected.")
 
 # Initialize the socket data
-values = [None] * 15 # * Data columns
+values = [None] * 15 # Number of Data columns
 
 # Initial data send
 data = pickle.dumps(values)
@@ -61,7 +61,7 @@ con = sqlite3.connect("EVGPTelemetry.sqlite")
 cur = con.cursor()
 
 # If main table does not exist as a table, create it
-create_table_sql = """
+cur.execute("""
     CREATE TABLE IF NOT EXISTS main (
     time REAL UNIQUE PRIMARY KEY,
     amp_hours REAL,
@@ -80,24 +80,26 @@ create_table_sql = """
     GPS_y REAL,
     laps NUMERIC
 )
-"""
-
-cur.execute(create_table_sql)
+""")
 con.commit()
 
+# Find a list of days that are present in the database
+cur.execute('''
+    SELECT DISTINCT
+        DATE(time, 'unixepoch') AS day
+        FROM main
+        ORDER BY day;
+''')
+days = cur.fetchall()
+
 # Create individual views for each existing day if they do not exist
-create_view_sql = """SELECT
-    'CREATE VIEW IF NOT EXISTS ' || day || ' AS SELECT * FROM main WHERE strftime(''%Y_%m_%d'', datetime(time, ''unixepoch'')) = ''' || day || ''';'
-        FROM (
-            SELECT DISTINCT strftime('%Y_%m_%d', datetime(time, 'unixepoch')) AS day
-            FROM main
-        )
-        WHERE day NOT IN (
-            SELECT name FROM sqlite_master WHERE type='view'
-        );
-        """
-#cur.execute(create_view_sql) # Get this working
-#con.commit()
+for day in days:
+    cur.execute('''
+    CREATE VIEW IF NOT EXISTS {}
+    AS SELECT * FROM main
+    WHERE DATE(time, 'unixepoch') = {}
+''', [day, day])
+con.commit()
 
 insert_data_sql = f"""
     INSERT INTO main (

@@ -15,7 +15,6 @@ import math
 import subprocess
 import time
 from datetime import datetime, timedelta
-import logging
 import struct
 import sqlite3
 
@@ -56,19 +55,23 @@ CREATE TABLE IF NOT EXISTS main (
 ''')
 con.commit()
 
+# Find a list of days that are present in the database
+cur.execute('''
+    SELECT DISTINCT
+        DATE(time, 'unixepoch') AS day 
+        FROM main
+        ORDER BY day;
+''')
+days = cur.fetchall()
+
 # Create individual views for each existing day if they do not exist
-create_view_sql = """SELECT 
-    'CREATE VIEW IF NOT EXISTS ' || day || ' AS SELECT * FROM main WHERE strftime(''%Y_%m_%d'', datetime(time, ''unixepoch'')) = ''' || day || ''';'
-        FROM (
-            SELECT DISTINCT strftime('%Y_%m_%d', datetime(time, 'unixepoch')) AS day
-            FROM main
-        )
-        WHERE day NOT IN (
-            SELECT name FROM sqlite_master WHERE type='view'
-        );
-        """
-#cur.execute(create_view_sql) # Get this working
-#con.commit()
+for day in days:
+    cur.execute('''
+    CREATE VIEW IF NOT EXISTS {}
+    AS SELECT * FROM main
+    WHERE DATE(time, 'unixepoch') = {}
+''', [day, day])
+con.commit()
 
 # tx_config = TXConfig.new(
 #     frequency=915,
@@ -362,6 +365,7 @@ def mainloop():
 
                 packed_data = struct.pack('<' + 'd'*len(data), *data)
                 rfm9x.send(packed_data)
+
                 print("Packet sent")
                 # radio.transmit(tx_config, data_2_send)
                 GPIO.output(sendLED, 0)
