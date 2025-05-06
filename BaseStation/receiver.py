@@ -138,8 +138,8 @@ while True:
         continue  # Skip this iteration and wait for the next packet
 
     # Unpack the data only if the packet size is valid
-    num_floats = len(packet) // 8  # Number of doubles (each double is 8 bytes)
-    floats = struct.unpack('<' + 'd' * num_floats, packet)
+    num_floats = len(packet) // 4  # Number of floats (each double is 4 bytes)
+    floats = struct.unpack('<' + 'f' * num_floats, packet)
 
     print(floats)
     # Assign the extracted data to the respective variables

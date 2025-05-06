@@ -360,14 +360,11 @@ def mainloop():
 
         if send_cooldown == 0:
             try:
-                # Encode Data
-                for var in data:
-                    data_2_send += struct.pack('<d', var)
-
+                # Encode data as a 32 bit float
+                packed_data = struct.pack('<' + 'f'*len(data), *data)
+                
                 # Send Data
                 GPIO.output(sendLED, 1)
-
-                packed_data = struct.pack('<' + 'd'*len(data), *data)
                 rfm9x.send(packed_data)
                 print("Packet sent")
                 # radio.transmit(tx_config, data_2_send)
