@@ -86,7 +86,7 @@ con.commit()
 # radio = CC1101("/dev/cc1101.0.0") # The default device path
 
 # Setup Thermistor Values
-R1 = 10000.0
+R1 = 13000.0
 logR2 = R2 = T = 0.0  # Initializing logR2, R2, and T as float values (defaulting to 0.0)
 c1 = 1.009249522e-03
 c2 = 2.378405444e-04
@@ -270,53 +270,57 @@ def UART_GPS():
     return float('nan'), float('nan')
 
 def thermistor(idx):
+    idx = idx*1024/32768
     R2 = R1 * (1023.0 / float(idx) - 1.0)
     logR2 = math.log(R2)
     T = 1.0 / (c1 + c2 * logR2 + c3 * logR2**3)
     T = T - 273.15  # Convert from Kelvin to Celsius
-    T = (T * 9.0) / 5.0 + 32.0  # Convert from Celsius to Fahrenheit
+    #T = (T * 9.0) / 5.0 + 32.0  # Convert from Celsius to Fahrenheit
     return T
+
+def mapTo(x, minI, maxI, minO, maxO):
+    return (x-minI)/(maxI-minI)*(maxO-minO)+minO
 
 def analogPull():
     # Throttle Value
     try:
-        throttle = A0.value
+        throttle = mapTo(B1.value, 6500, 33000, 0, 1000)
     except:
         throttle = float('nan')
 
     # Brake Value
     try:
-        brake = B3.value
+        brake = mapTo(B3.value, 15000, 21500, 0, 1000)
     except:
         brake = float('nan')
 
     # Motor Temperature
     try:
-        motor_temp = A1.value
+        motor_temp = thermistor(B0.value)
     except:
         motor_temp = float('nan')
 
     # Battery 1 Temperature
     try:
-        batt_1 = thermistor(A2.value)
+        batt_1 = thermistor(A0.value)
     except:
         batt_1 = float('nan')
 
     # Battery 2 Temperature
     try:
-        batt_2 = thermistor(A3.value)
+        batt_2 = thermistor(A1.value)
     except:
         batt_2 = float('nan')
 
     # Battery 3 Temperature
     try:
-        batt_3 = thermistor(B0.value)
+        batt_3 = thermistor(A2.value)
     except:
         batt_3 = float('nan')
 
     # Battery 4 Temperature
     try:
-        batt_4 = A3.value
+        batt_4 = thermistor(A3.value)
     except:
         batt_4 = float('nan')
 
@@ -365,7 +369,6 @@ def mainloop():
 
                 packed_data = struct.pack('<' + 'd'*len(data), *data)
                 rfm9x.send(packed_data)
-
                 print("Packet sent")
                 # radio.transmit(tx_config, data_2_send)
                 GPIO.output(sendLED, 0)
