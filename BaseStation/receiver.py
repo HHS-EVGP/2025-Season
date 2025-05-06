@@ -139,7 +139,7 @@ while True:
 
     # Unpack the data only if the packet size is valid
     num_floats = len(packet) // 4  # Number of floats (each double is 4 bytes)
-    floats = struct.unpack('<' + 'f' * num_floats, packet)
+    floats = struct.unpack('<' + 'f' *num_floats, packet)
 
     print(floats)
     # Assign the extracted data to the respective variables

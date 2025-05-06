@@ -361,7 +361,7 @@ def mainloop():
         if send_cooldown == 0:
             try:
                 # Encode data as a 32 bit float
-                packed_data = struct.pack('<' + 'f'*len(data), *data)
+                packed_data = struct.pack('<' + 'f' * len(data), *data)
                 
                 # Send Data
                 GPIO.output(sendLED, 1)
