@@ -14,7 +14,7 @@ from digitalio import DigitalInOut, Direction, Pull # type: ignore
 import math
 import subprocess
 import time
-from datetime import datetime, timedelta
+from datetime import datetime
 import struct
 import sqlite3
 
@@ -26,7 +26,7 @@ rfm9x.tx_power = 23
 bus = smbus.SMBus(1)
 
 On_GPS_time = False
-send_cooldown = 2 # With data pulling 4x a second, sending rf 2x a second
+send_cooldown = 4 # With data pulling 4x a second, sending rf 1x a second
 
 # Connect to the car's database
 con = sqlite3.connect('./CarTelemetry.sqlite')
@@ -56,21 +56,21 @@ CREATE TABLE IF NOT EXISTS main (
 con.commit()
 
 # Find a list of days that are present in the database
-cur.execute('''
+cur.execute("""
     SELECT DISTINCT
-        DATE(time, 'unixepoch') AS day 
+        DATE(time, 'unixepoch') AS day
         FROM main
         ORDER BY day;
-''')
+""")
 days = cur.fetchall()
 
 # Create individual views for each existing day if they do not exist
 for day in days:
-    cur.execute('''
-    CREATE VIEW IF NOT EXISTS {}
+    cur.execute(f"""
+    CREATE VIEW IF NOT EXISTS {day}
     AS SELECT * FROM main
-    WHERE DATE(time, 'unixepoch') = {}
-''', [day, day])
+    WHERE DATE(time, 'unixepoch') = '{day}';
+    """)
 con.commit()
 
 # tx_config = TXConfig.new(
@@ -219,16 +219,13 @@ def read_full_sentence():
 
 # UART handler for GPS
 def UART_GPS():
-    # The GPS unit returns the same data in varius formats at once (by default)
-    # The $GPRMC scheme containes the most relevant data
-    # $GPRMC documentation: https://docs.novatel.com/OEM7/Content/Logs/GPRMC.htm
     try:
         data = read_full_sentence()
-
         # data = read_from_uart(GPS704_ADDR, 128)  # GPS data length can be longer (up to 255 bytes)
+
         if data:
 
-            killall, timestamp, pos_status, lat, lat_dir, lon, lon_dir, speed, track_true, date, \
+            killall, gpstime, pos_status, lat, lat_dir, lon, lon_dir, speed, track_true, date, \
                 mag_var, var_dir, checksum = data.split(',')
 
             # If no GPS fix, return nan for all variables
@@ -238,7 +235,7 @@ def UART_GPS():
 
             # Set System time to gps time if not done yet
             if not On_GPS_time:
-                set_system_time(timestamp, date)
+                set_system_time(gpstime, date)
 
             # Convert latitude and longitude to decimal degrees
             lat = float(lat[:2]) + float(lat[2:]) / 60.0
@@ -333,49 +330,47 @@ insert_data_sql = """
     ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
     """
 
-def mainloop():
+while True:
+    data_2_send = b''
+    send_cooldown -= 1
 
-    while True:
-        data_2_send = b''
+    # Get Data
+    timestamp = time.time()
+    amp_hours, voltage, current, speed, miles = UART_CA()
+    throttle, brake, motor_temp, batt_1, batt_2, batt_3, batt_4 = analogPull()
+    GPS_x, GPS_y = UART_GPS()
 
-        global send_cooldown
-        send_cooldown -= 1
+    data = [
+        timestamp, throttle, brake, motor_temp, batt_1, batt_2, batt_3, batt_4, \
+        amp_hours, voltage, current, speed, miles, GPS_x, GPS_y
+    ]
+    print(data)
 
-        # Get Data
-        timestamp = time.time()
-        amp_hours, voltage, current, speed, miles = UART_CA()
-        throttle, brake, motor_temp, batt_1, batt_2, batt_3, batt_4 = analogPull()
-        GPS_x, GPS_y = UART_GPS()
+    # Add data to the database:
+    cur.execute(insert_data_sql, data)
+    con.commit()
+    print("Logged Data")
 
-        data = [
-         timestamp, throttle, brake, motor_temp, batt_1, batt_2, batt_3, batt_4, \
-         amp_hours, voltage, current, speed, miles, GPS_x, GPS_y
-        ]
+    # Attempt to send data
+    if send_cooldown == 0:
+        try:
+            # Shift epoch to Jan 1 2025 to avoid excessive rounding
+            data[0] -= time.mktime(datetime(2025, 1, 1, 0, 0, 0).timetuple())
 
-        print(data)
-        # Add data to the database:
-        cur.execute(insert_data_sql, data)
-        con.commit()
-        print("Logged Data")
+            # Encode data as a 32 bit float
+            packed_data = struct.pack('<' + 'f' * len(data), *data)
 
-        if send_cooldown == 0:
-            try:
-                # Encode data as a 32 bit float
-                packed_data = struct.pack('<' + 'f' * len(data), *data)
-                
-                # Send Data
-                GPIO.output(sendLED, 1)
-                rfm9x.send(packed_data)
-                print("Packet sent")
-                # radio.transmit(tx_config, data_2_send)
-                GPIO.output(sendLED, 0)
+            # Send Data
+            GPIO.output(sendLED, 1)
+            rfm9x.send(packed_data)
+            # radio.transmit(tx_config, data_2_send)
+            print("Packet sent")
+            GPIO.output(sendLED, 0)
 
-                send_cooldown = 2
+            send_cooldown = 2
 
-            except Exception as e:
-                print("Error sending data:", e)
-        time.sleep(0.25)
+        except Exception as e:
+            print("Error sending data:", e)
+    
+    time.sleep(0.25)
 
-
-if __name__ == "__main__":
-    mainloop()
