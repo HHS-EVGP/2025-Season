@@ -37,7 +37,7 @@ lastSocketDump = [None] * 15  # * Data columns
 
 # Function to clean up data for display
 def clean_view(var):
-    if var is not None and var != 'Error':
+    if var != None and var != 'Error':
         var = round(var, 3)
         var = format(var, ".3f") # Add trailing zeros to ensure lenth stays the same
     return var

@@ -1,5 +1,6 @@
 import sqlite3
-from datetime import datetime
+from datetime import datetime, timedelta
+import time
 import struct
 import math
 
@@ -7,20 +8,9 @@ import socket
 import pickle
 import os
 
-import busio # type: ignore
-import time
-import board # type: ignore
-
-import adafruit_rfm9x # type: ignore
-from digitalio import DigitalInOut, Direction, Pull # type: ignore
-rfm9x = adafruit_rfm9x.RFM9x(busio.SPI(board.SCK, MOSI=board.MOSI, MISO=board.MISO), DigitalInOut(board.CE1), DigitalInOut(board.D25), 433.0, high_power = True)
-rfm9x.tx_power = 23
-
-# from cc1101 import CC1101 # type: ignore
-# from cc1101.config import RXConfig, Modulation # type: ignore
+import cc1101
 
 prev_values = [None] * 15
-
 SOCKETPATH = "/tmp/telemSocket"
 
 # Remove existing socket file if it exists
@@ -43,19 +33,6 @@ values = [None] * 15 # Number of Data columns
 data = pickle.dumps(values)
 sock.sendall(data)
 
-## Transmission variables ##
-# rx_config = RXConfig.new(
-#     frequency=915,
-#     modulation=Modulation.MSK, # Read up: https://en.wikipedia.org/wiki/Minimum-shift_keying
-#     baud_rate=12, # Baud rate in kbps (Currently 3kb for each quarter second packet)
-#     sync_word=0xD391, # Unique 16-bit sync word (Happens to be unicode for 펑 :) )
-#     preamble_length=4, # Recommended: https://e2e.ti.com/support/wireless-connectivity/sub-1-ghz-group/sub-1-ghz/f/sub-1-ghz-forum/1027627/cc1101-preamble-sync-word-quality
-#     packet_length=120, # In Bytes (Number of columns * 8)
-#     bandwidth=58,
-#     carrier_sense=+6
-#     crc=True, # Enable a checksum
-# )
-# radio = CC1101("/dev/cc1101.0.0", rx_config, blocking=True) # blocking=True means program will wait for a packet to be received
 
 # Link the database to the python cursor
 con = sqlite3.connect("EVGPTelemetry.sqlite")
@@ -93,14 +70,14 @@ cur.execute('''
 ''')
 days = cur.fetchall()
 
-# Create individual views for each existing day if they do not exist
-for day in days:
-    cur.execute(f"""
-    CREATE VIEW IF NOT EXISTS {day}
-    AS SELECT * FROM main
-    WHERE DATE(time, 'unixepoch') = '{day}';
-    """)
-con.commit()
+## Create individual views for each existing day if they do not exist
+#for day in days:
+#    cur.execute(f"""
+#    CREATE VIEW IF NOT EXISTS {day}
+#    AS SELECT * FROM main
+#    WHERE DATE(time, 'unixepoch') = '{day}';
+#    """)
+#con.commit()
 
 insert_data_sql = f"""
     INSERT INTO main (
@@ -108,62 +85,95 @@ insert_data_sql = f"""
         amp_hours, voltage, current, speed, miles, GPS_X, GPS_Y
     ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
     """
+with cc1101.CC1101(spi_bus=0, spi_chip_select=0) as radio:
+    ## Transmission Variables ##
+    radio._enable_receive_mode()
+    #radio.set_sync_mode(0b10, False) # No carrier sense threshold
+    #radio._set_filter_bandwidth(60)
 
-while True:
-    # Receive the next packets
-    # packets = radio.receive() # Is blocking and buffering
+    radio.set_base_frequency_hertz(433000000)
+    radio._set_modulation_format(cc1101.ModulationFormat.MSK)
+    radio.set_symbol_rate_baud(5000)
+    radio.set_sync_word(b'\x91\xd3')
+    radio.set_preamble_length_bytes(4)
 
-    packet = None
-    packet = rfm9x.receive()
+    print("Radio config:", radio)
+    waitnum = 0
 
-    print("Check for Packet")
-    if not packet:
-        time.sleep(0.4)
-        print("No Packet")
-        continue
+    while True:
+        lastHalf = None
 
-    print("Received Packet")
+        # Wait for a packet
+        if radio._wait_for_packet(timedelta(seconds=5), gdo0_gpio_line_name=b"GPIO24") == None: # Timeout of 5 seconds
+            print(f"Waiting for packet for the {waitnum}th time")
+            waitnum += 1
+            continue
 
-    if len(packet) % 4 != 0:
-        print(f"Invalid packet size: {len(packet)} bytes, cannot unpack")
-        continue  # Skip this iteration and wait for the next packet
+        # Receive a packet
+        indump = radio._get_received_packet()
+        if indump is None:
+            continue
 
-    try:
-        # Unpack the data
-        num_floats = len(packet) // 4  # Number of floats (each double is 4 bytes)
-        floats = struct.unpack('<' + 'f' *num_floats, packet)
-        print(floats)
+        waitnum = 0
+        packet = indump.payload
+        print("Received Packet part")
 
-        # Assign the extracted data to the respective variables
-        timestamp, throttle, brake, motor_temp, batt_1, batt_2, batt_3, batt_4, \
-            amp_hours, voltage, current, speed, miles, GPS_x, GPS_y = floats
-        
-        # Shift the epoch back to Jan 1 1970 for storage
-        floats[0] += time.mktime(datetime(2025, 1, 1, 0, 0, 0).timetuple())
+        if len(packet) % 4 != 0:
+            print(f"Invalid packet size: {len(packet)} bytes, cannot unpack")
+            continue  # Skip this iteration and wait for the next packet
 
-    except Exception as e:
-        print(f"Error extracting data: {e}")
-        continue
+        print(packet)
+        try:
+            # Unpack the data
+            num_floats = len(packet) // 4  # Number of floats (each double is 4 bytes)
+            floats = struct.unpack('<' + 'f' *num_floats, packet)
 
-    values = [
-         timestamp, throttle, brake, motor_temp, batt_1, batt_2, batt_3, batt_4,
-         amp_hours, voltage, current, speed, miles, GPS_x, GPS_y
-    ]
+            # If this is the second half, and we have the first half, join them
+            if floats.pop() == 1:
+                if lastHalf != None:
+                    # Merge the two halves of the packet
+                    floats = lastHalf + floats
+                    print("Received full packet!")
 
-    # If a value is nan, replace it with None
-    values = [None if math.isnan(x) else x for x in values]
+                else:
+                    print("Only have second half of packet. Dropping...")
+                    continue
 
-    # Insert the data into the database
-    cur.execute(insert_data_sql, values)
-    con.commit()
+            # If this is a first half, remember it
+            elif floats.pop == 0:
+                lastHalf = floats
+                continue
 
-    # If a variable in values is None, replace it with what it was last
-    for i in range(len(values)):
-        if values[i] is None:
-            values[i] = prev_values[i]
+            # Assign the extracted data to the respective variables
+            timestamp, throttle, brake, motor_temp, batt_1, batt_2, batt_3, batt_4, \
+                amp_hours, voltage, current, speed, miles, GPS_x, GPS_y = floats
 
-    # Pickle the socket data and send it
-    data = pickle.dumps(values)
-    sock.sendall(data)
+            # Shift the epoch back to Jan 1 1970 for storage
+            floats[0] += time.mktime(datetime(2025, 1, 1, 0, 0, 0).timetuple())
 
-    prev_values = values
+        except Exception as e:
+            print(f"Error extracting data: {e}")
+            continue
+
+        values = [
+            timestamp, throttle, brake, motor_temp, batt_1, batt_2, batt_3, batt_4,
+            amp_hours, voltage, current, speed, miles, GPS_x, GPS_y
+        ]
+
+        # If a value is nan, replace it with None
+        values = [None if math.isnan(x) else x for x in values]
+
+        # Insert the data into the database
+        cur.execute(insert_data_sql, values)
+        con.commit()
+
+        # If a variable in values is None, replace it with what it was last
+        for i in range(len(values)):
+            if values[i] is None:
+                values[i] = prev_values[i]
+
+        # Pickle the socket data and send it
+        data = pickle.dumps(values)
+        sock.sendall(data)
+
+        prev_values = values
