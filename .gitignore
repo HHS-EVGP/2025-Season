@@ -1,3 +1,2 @@
 .vscode/
-BaseStation/frontend/flaskenv
-BaseStation/frontend/__pycache__
+pyenv/
