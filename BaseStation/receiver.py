@@ -71,13 +71,13 @@ cur.execute('''
 days = cur.fetchall()
 
 ## Create individual views for each existing day if they do not exist
-#for day in days:
-#    cur.execute(f"""
-#    CREATE VIEW IF NOT EXISTS {day}
-#    AS SELECT * FROM main
-#    WHERE DATE(time, 'unixepoch') = '{day}';
-#    """)
-#con.commit()
+for day in days:
+    cur.execute(f"""
+    CREATE VIEW IF NOT EXISTS {day}
+    AS SELECT * FROM main
+    WHERE DATE(time, 'unixepoch') = '{day}';
+    """)
+con.commit()
 
 insert_data_sql = f"""
     INSERT INTO main (
@@ -100,56 +100,44 @@ with cc1101.CC1101(spi_bus=0, spi_chip_select=0) as radio:
     print("Radio config:", radio)
     waitnum = 0
 
-    while True:
-        lastHalf = None
+    # Lenths of seperate encoding types (See collector.py, line 345)
+    len64 = 8
+    len16 = 14
+    len32 = 28
 
-        # Wait for a packet
-        if radio._wait_for_packet(timedelta(seconds=5), gdo0_gpio_line_name=b"GPIO24") == None: # Timeout of 5 seconds
-            print(f"Waiting for packet for the {waitnum}th time")
+    expected_len = len64 + len16 + len32
+
+    while True:
+        # Receive a packet
+        # GIPO 24 goes High when a packet is avalable
+        indump = radio._wait_for_packet(timedelta(seconds=5), gdo0_gpio_line_name=b"GPIO24")
+
+        if indump == None:
+            print(f"Waited for packet {waitnum} time(s)")
             waitnum += 1
             continue
 
-        # Receive a packet
-        indump = radio._get_received_packet()
-        if indump is None:
-            continue
+        packet = indump.payload()
 
-        waitnum = 0
-        packet = indump.payload
-        print("Received Packet part")
+        if indump.checksum_valid == False:
+            print("CRC Failed!!!")
+            #continue
 
-        if len(packet) % 4 != 0:
-            print(f"Invalid packet size: {len(packet)} bytes, cannot unpack")
-            continue  # Skip this iteration and wait for the next packet
+        if len(packet) != expected_len:
+            print(f"Invalid packet size: {len(packet)} bytes!")
 
-        print(packet)
         try:
-            # Unpack the data
-            num_floats = len(packet) // 4  # Number of floats (each double is 4 bytes)
-            floats = struct.unpack('<' + 'f' *num_floats, packet)
+            # Unpack the 64 bit section
+            in64 = struct.unpack("<" + "d" *len64, packet[:len64])
+            timestamp = in64[0]
 
-            # If this is the second half, and we have the first half, join them
-            if floats.pop() == 1:
-                if lastHalf != None:
-                    # Merge the two halves of the packet
-                    floats = lastHalf + floats
-                    print("Received full packet!")
+            # Unpack the 16 bit section
+            in16 = struct.unpack("<" + "e", *len16, packet[len64:(len64+len16)])
+            throttle, brake, motor_temp, batt_1, batt_2, batt_3, batt_4 = in16
 
-                else:
-                    print("Only have second half of packet. Dropping...")
-                    continue
-
-            # If this is a first half, remember it
-            elif floats.pop == 0:
-                lastHalf = floats
-                continue
-
-            # Assign the extracted data to the respective variables
-            timestamp, throttle, brake, motor_temp, batt_1, batt_2, batt_3, batt_4, \
-                amp_hours, voltage, current, speed, miles, GPS_x, GPS_y = floats
-
-            # Shift the epoch back to Jan 1 1970 for storage
-            floats[0] += time.mktime(datetime(2025, 1, 1, 0, 0, 0).timetuple())
+            # Unpackt the 32 bit section
+            in32 = struct.unpack("<" + "f" * len32, packet[len64+len16:])
+            amp_hours, voltage, current, speed, miles, GPS_x, GPS_y = in32
 
         except Exception as e:
             print(f"Error extracting data: {e}")

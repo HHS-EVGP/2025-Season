@@ -330,7 +330,7 @@ def collector():
             radio.set_base_frequency_hertz(433000000)
             radio._set_modulation_format(cc1101.ModulationFormat.MSK)
             radio.set_symbol_rate_baud(5000)
-            radio.set_sync_word(b'\x91\xd3') # If you're a different school, make this different
+            radio.set_sync_word(b'\x91\xd3') # If you're a different school, make this (Or the frequency) different
             radio.set_preamble_length_bytes(4)
             radio.set_output_power([0xC0, 0xC2]) # See datasheet: Table 39 and Section 24
 
@@ -341,11 +341,19 @@ def collector():
                 throttle, brake, motor_temp, batt_1, batt_2, batt_3, batt_4 = analogPull()
                 GPS_x, GPS_y = UART_GPS()
 
-                data = [
-                    timestamp, throttle, brake, motor_temp, batt_1, batt_2, batt_3, batt_4, \
-                    amp_hours, voltage, current, speed, miles, GPS_x, GPS_y
-                ]
-                print(data)
+                # Designate wich variables will be encoded wich way
+                data64 = [timestamp] # 8 bytes
+                data16 = [throttle, brake, motor_temp, batt_1, batt_2, batt_3, batt_4] # 14 bytes
+                data32 = [amp_hours, voltage, current, speed, miles, GPS_x, GPS_y] # 28 bytes
+                # 8+14+28 = 50 bytes, wich is under the 56 byte buffer limit of the cc1101*
+                # *Total limit is 64 bytes, but 8 are taken up by the pramble, sync word, and chekcsum
+
+                print(data64)
+                print(data16)
+                print(data32)
+
+                # Combine all data together for logging
+                data = data64 + data16 + data32
 
                 # Add data to the database:
                 cur.execute(insert_data_sql, data)
@@ -354,33 +362,26 @@ def collector():
 
                 # Attempt to send data
                 try:
-                    # Shift epoch to Jan 1 2025 to avoid excessive rounding
-                    data[0] -= time.mktime(datetime(2025, 1, 1, 0, 0, 0).timetuple())
+                    packet = b""
 
-                    # Split the data into two packets to avoid buffer overflow
-                    packet0 = data[:len(data) // 2]
-                    packet1 = data[len(packet0):]
+                    # Encode time as 64 bit
+                    packet += struct.pack("<" + "d" * len(data64), *data64)
 
-                    # Append packet index
-                    packet0.append(0)
-                    packet1.append(1)
+                    # Encode ADC Values as 16 bit
+                    packet += struct.pack("<" + "e" * len(data16), *data16)
 
-                    packets = [packet0, packet1]
+                    # Encode CA and GPS as 32 bit
+                    packet += struct.pack("<" + "f" * len(data32), *data32)
 
-                    for packet in packets:
-                        # Encode data as a 32 bit float
-                        packed_data = struct.pack('<' + 'f' * len(packet), *packet)
-
-                        # Send Data
-                        GPIO.output(sendLED, 1)
-                        radio.transmit(packed_data)
-                        time.sleep(0.1)
-                        GPIO.output(sendLED, 0)
-                        print("Packet sent")
+                    # Send Data
+                    GPIO.output(sendLED, 1)
+                    radio.transmit(packet)
+                    GPIO.output(sendLED, 0)
+                    print("Packet sent")
 
                 except Exception as e:
                     print("Error sending data:", e)
-                    
+
     except Exception as e:
         sys.exit(1)
 
