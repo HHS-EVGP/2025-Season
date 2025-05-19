@@ -94,11 +94,6 @@ def collector():
         i2c = busio.I2C(board.SCL, board.SDA)
         analogA = ADS.ADS1115(i2c, address = 0x4B)
         analogB = ADS.ADS1115(i2c, address = 0x4A)
-        CA704_ADDR = 0x28  # Replace with the actual I2C address -- Cycle Analyst
-        GPS704_ADDR = 0x29  # Replace with the actual I2C address -- GPS
-
-        # FOR SETTING UP 704', FOLLOW THIS GPT PAGE:
-        # https://chatgpt.com/share/673cbcb7-9a74-8010-9a24-c0a5603eb385
 
         # Setup Analog In Ports
         A0 = AnalogIn(analogA, ADS.P0) # battTemp1
@@ -110,37 +105,11 @@ def collector():
         #B2 = AnalogIn(analogB, ADS.P2) # Port not used
         B3 = AnalogIn(analogB, ADS.P3) # brake
 
-        # Setup UART for Cycle Anyalist
+        # Setup Serial for Cycle Anyalist
         cycleAnalyst = serial.Serial('/dev/serial0',baudrate=9600,timeout=5)
 
 
-        # Function to write to a specific SC18IM704 UART (Used only if needed by user)
-        def write_to_uart(device_addr, data):
-            try:
-                # Command structure: Start ('S'), data, Stop ('P')
-                command = [ord('S')] + list(data.encode('utf-8')) + [ord('P')]
-                i2c.writeto(device_addr, bytearray(command))
-                print(f"Sent to UART on device {device_addr:02X}: {data}")
-            except Exception as e:
-                print(f"Error writing to UART on device {device_addr:02X}: {e}")
-
-
-        # Function to read from a specific SC18IM704 UART
-        def read_from_uart(device_addr, length=10):
-            try:
-                # Command to read data from UART: 'S', I2C address, 'R', 'P'
-                command = [ord('S'), 0x01, ord('R'), ord('P')]
-                i2c.writeto(device_addr, bytearray(command))
-                time.sleep(0.1)  # Allow time for processing
-                response = i2c.readfrom(device_addr, length)  # Adjust length as needed
-                print(f"Received from UART on device {device_addr:02X}: {response}")
-                return response.decode('utf-8', errors='ignore')
-            except Exception as e:
-                print(f"Error reading from UART on device {device_addr:02X}: {e}")
-                return None
-
-
-        # UART handler for Cycle Analyst
+        # Serial handler for Cycle Analyst
         def SERIAL_CA():
             # Input from CA is: amp_hours|voltage|current|speed|miles
             try:
@@ -165,13 +134,13 @@ def collector():
                 return float('nan'), float('nan'), float('nan'), float('nan'), float('nan')
 
 
-        def set_system_time(timestamp, date):
+        def set_system_time(gpstime, date):
             """Set the system time using the date command."""
 
             # Extract hours, minutes, and seconds from timestamp
-            hours = timestamp[:2]
-            minutes = timestamp[2:4]
-            seconds = timestamp[4:]
+            hours = gpstime[:2]
+            minutes = gpstime[2:4]
+            seconds = gpstime[4:]
 
             # Adjust for our timezone
             hours = int(hours)  - 4
@@ -191,6 +160,7 @@ def collector():
             global On_GPS_time
             On_GPS_time = True
 
+
         def read_full_sentence():
             sentence = ""
             for _ in range(10):
@@ -208,6 +178,7 @@ def collector():
                     break
                 time.sleep(0.01)
             return sentence
+
 
         # UART handler for GPS
         def UART_GPS():
@@ -258,6 +229,7 @@ def collector():
             # didn't work out
             return float('nan'), float('nan')
 
+
         def thermistor(idx):
             idx = idx*1024/32768
             R2 = R1 * (1023.0 / float(idx) - 1.0)
@@ -267,8 +239,10 @@ def collector():
             #T = (T * 9.0) / 5.0 + 32.0  # Convert from Celsius to Fahrenheit
             return T
 
+
         def mapTo(x, minI, maxI, minO, maxO):
             return (x-minI)/(maxI-minI)*(maxO-minO)+minO
+
 
         def analogPull():
             # Throttle Value
@@ -315,12 +289,14 @@ def collector():
 
             return throttle, brake, motor_temp, batt_1, batt_2, batt_3, batt_4
 
+
         insert_data_sql = """
             INSERT INTO main (
                 time, Throttle, Brake, Motor_temp, Batt_1, Batt_2, Batt_3, Batt_4,
                 amp_hours, Voltage, Current, Speed, Miles, GPS_X, GPS_Y
             ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
             """
+
 
         with cc1101.CC1101(spi_bus=0, spi_chip_select=1) as radio:
             # Reset the device
@@ -365,7 +341,6 @@ def collector():
                     packet = b""
 
                     # Encode time as 64 bit
-                    packet += struct.pack("<" + "d" * len(data64), *data64)
 
                     # Encode ADC Values as 16 bit
                     packet += struct.pack("<" + "e" * len(data16), *data16)
