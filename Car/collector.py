@@ -141,7 +141,7 @@ def collector():
 
 
         # UART handler for Cycle Analyst
-        def UART_CA():
+        def SERIAL_CA():
             # Input from CA is: amp_hours|voltage|current|speed|miles
             try:
                 # data = read_from_uart(CA704_ADDR, 10)  # Adjust length for Cycle Analyst
@@ -161,7 +161,7 @@ def collector():
 
                     return float('nan'), float('nan'), float('nan'), float('nan'), float('nan')
             except Exception as e:
-                print(f"Error in UART_CA function: {e}")
+                print(f"Error in SERIAL_CA function: {e}")
                 return float('nan'), float('nan'), float('nan'), float('nan'), float('nan')
 
 
@@ -337,7 +337,7 @@ def collector():
             while True:
                 # Get Data
                 timestamp = time.time()
-                amp_hours, voltage, current, speed, miles = UART_CA()
+                amp_hours, voltage, current, speed, miles = SERIAL_CA()
                 throttle, brake, motor_temp, batt_1, batt_2, batt_3, batt_4 = analogPull()
                 GPS_x, GPS_y = UART_GPS()
 
