@@ -4,9 +4,9 @@ After=multi-user.target
 
 [Service]
 Type=simple
+User=car
 ExecStart=/home/car/pyenv/bin/python3 /home/car/buttons.py
 Restart=always
-User=root
 WorkingDirectory=/home/car
 
 [Install]
