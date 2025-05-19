@@ -6,10 +6,6 @@ This project is a data collection and visualization system for an electric race 
 
 The Harrisonburg High School Electric Vehicle Grand Prix team is a student-run racing team that builds an electric car and races it in an endurance race. As of 2025, we are a four-year-old team, and from the start, live data has been an important part of our race strategy.
 
-### Program Structure
-
-The car collects data from some analog sources, the onboard electrical system, and a GPS unit, storing it in an SQLite database. At the same time, the car transmits 
-
 #
 
 ### Prerequisites
