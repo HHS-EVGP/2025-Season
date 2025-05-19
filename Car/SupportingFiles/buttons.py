@@ -85,3 +85,6 @@ white_led.on()
 # Set up button actions
 start_btn.when_pressed = start_script
 restart_btn.when_pressed = restart_pi
+
+# Start collector initially
+start_script()
