@@ -110,7 +110,7 @@ def collector():
 
 
         # Serial handler for Cycle Analyst
-        def SERIAL_CA():
+        def UART_CA():
             # Input from CA is: amp_hours|voltage|current|speed|miles
             try:
                 # data = read_from_uart(CA704_ADDR, 10)  # Adjust length for Cycle Analyst
@@ -184,7 +184,6 @@ def collector():
         def UART_GPS():
             try:
                 data = read_full_sentence()
-                # data = read_from_uart(GPS704_ADDR, 128)  # GPS data length can be longer (up to 255 bytes)
 
                 if data:
 
@@ -313,7 +312,7 @@ def collector():
             while True:
                 # Get Data
                 timestamp = time.time()
-                amp_hours, voltage, current, speed, miles = SERIAL_CA()
+                amp_hours, voltage, current, speed, miles = UART_CA()
                 throttle, brake, motor_temp, batt_1, batt_2, batt_3, batt_4 = analogPull()
                 GPS_x, GPS_y = UART_GPS()
 
