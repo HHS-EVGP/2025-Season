@@ -59,20 +59,20 @@ def collector():
         con.commit()
 
         # Find a list of days that are present in the database
-        cur.execute("""
+        cur.execute('''
             SELECT DISTINCT
                 DATE(time, 'unixepoch') AS day
                 FROM main
                 ORDER BY day;
-        """)
-        days = list(cur.fetchall())
+        ''')
+        days = cur.fetchall()
 
-        # Create individual views for each existing day if they do not exist
-        for day in range(len(days)):
+        ## Create individual views for each existing day if they do not exist
+        for day in days:
             cur.execute(f"""
-            CREATE VIEW IF NOT EXISTS {days[day]}
+            CREATE VIEW IF NOT EXISTS '{day[0]}'
             AS SELECT * FROM main
-            WHERE DATE(time, 'unixepoch') = '{days[day]}';
+            WHERE DATE(time, 'unixepoch') = '{day[0]}';
             """)
         con.commit()
 

@@ -73,9 +73,9 @@ days = cur.fetchall()
 ## Create individual views for each existing day if they do not exist
 for day in days:
     cur.execute(f"""
-    CREATE VIEW IF NOT EXISTS {day}
+    CREATE VIEW IF NOT EXISTS '{day[0]}'
     AS SELECT * FROM main
-    WHERE DATE(time, 'unixepoch') = '{day}';
+    WHERE DATE(time, 'unixepoch') = '{day[0]}';
     """)
 con.commit()
 
