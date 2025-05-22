@@ -98,15 +98,16 @@
           </button>
         </span>
 
-        <!--Modal to authenticate lap controls-->
-        <div class="modal fade" id="lapauthmodal" tabindex="-1" aria-labelledby="exampleModalLabel" aria-hidden="true">
-          <div class="modal-dialog">
+        <!--Modal to authenticate lapt controls-->
+        <div class="modal fade" id="lapauthmodal" tabindex="-1" aria-hidden="true">
+          <div class="modal-dialog modal-dialog-centered">
             <div class="modal-content bg-dark text-white">
               <div class="modal-header border-secondary">
-                <h1 class="modal-title fs-5" id="exampleModalLabel">Enable lap controls?</h1>
-                <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"
-                  aria-label="Cancel"></button>
+
+                <h1 class="modal-title fs-5">Enable lap controls?</h1>
+                <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"aria-label="Cancel"></button>
               </div>
+
               <div class="modal-body text-start">
                 The number of laps and lap time are stored on the server, and are visible to everyone, but can be
                 changed by
@@ -119,7 +120,8 @@
                   <label for="accessCode">Enter Access Code:</label>
                   <input type="text" id="accessCode" name="accessCode" required oninput="code = this.value"
                     class="form-control bg-dark text-white border-secondary">
-                    <div style="color: red;" id="autherror">Incorrect Access Code</div>
+                  <div style="color: red;" id="autherror">Incorrect Access Code</div>
+              
               </div>
               <div class="modal-footer border-secondary">
                 <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
@@ -134,8 +136,34 @@
         <span id="lapcontrols">
           <button onclick="updateServerVariable('lap-')">Lap-</button>
           <button onclick="updateServerVariable('lap+'); playLapSound()">Lap+</button>
-          <button id="racing" onclick="updateServerVariable('togglerace')">Start Race</button>
+          <button id="racing" data-bs-toggle="modal" data-bs-target="#startstopmodal">Start Race</button>
         </span>
+
+        <!--Modal to confirm race start/stop-->
+        <div class="modal fade" id="startstopmodal" tabindex="-1" aria-hidden="true">
+          <div class="modal-dialog modal-dialog-centered">
+            <div class="modal-content bg-dark text-white">
+              <div class="modal-header border-secondary">
+
+                <h1 class="modal-title fs-5" id="exampleModalLabel">Toggle Race?</h1>
+                <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"
+                  aria-label="Cancel"></button>
+              </div>
+
+              <div class="modal-body text-start">
+                Are you sure you want to <span id='startorstop'></span> race?
+                <br><br>
+              </div>
+              
+              <div class="modal-footer border-secondary">
+                <button class="btn btn-secondary" data-bs-dismiss="modal">No</button>
+                <button onclick="updateServerVariable('togglerace')" data-bs-dismiss="modal"
+                  class="btn btn-primary">Yes</button>
+                </form>
+              </div>
+            </div>
+          </div>
+        </div>
 
         <div class="bordered">
           <p>Laps: <span id="laps" class="data"></span></p>
@@ -144,7 +172,6 @@
         </div>
 
       </div>
-
 
     </div>
   </div>

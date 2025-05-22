@@ -176,13 +176,15 @@ function updateData() {
       // Make data.racing a global variable
       window.racing = data.racing;
 
-      // Start/stop race button
+      // Start/stop race button and modal start/stop
       const racing = data.racing ?? false;
       if (racing == true) {
         document.getElementById('racing').textContent = "Stop Race";
+        document.getElementById('startorstop').textContent = "stop the current"
       }
       if (racing == false) {
         document.getElementById('racing').textContent = "Start Race"
+        document.getElementById('startorstop').textContent = "start a"
       }
 
       // GPS
