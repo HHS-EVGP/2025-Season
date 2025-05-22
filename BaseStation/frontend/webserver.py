@@ -117,7 +117,8 @@ def getdata():
         GPS_y=clean_view(GPS_y),
         laps=laps,
         laptime=format(laptime, ".1f") if laptime is not None else None,
-        lastlaptime=format(prev_laptimes[-1], ".1f") if sum(prev_laptimes) is not 0 else None,
+        lastlaptime=format(prev_laptimes[-1], ".1f") if prev_laptimes else None,
+        fastestlaptime=format(min(prev_laptimes), ".1f") if prev_laptimes else None,
         racetime=racetime,
         racetime_minutes=racetime_minutes,
         racing=racing

@@ -176,6 +176,7 @@ function updateData() {
       document.getElementById('laps').textContent = data.laps ?? 'NN';
       document.getElementById('laptime').textContent = data.laptime ?? 'NNN'
       document.getElementById('lastlaptime').textContent = data.lastlaptime ?? 'NNN';
+      document.getElementById('fastestlaptime').textContent = data.fastestlaptime ?? 'NNN';
       document.getElementById('racetime').textContent = data.racetime ?? 'NNN';
 
       // If racetime_minutes is not 0, display it
