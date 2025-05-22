@@ -74,7 +74,7 @@ def getdata():
         amp_hours, voltage, current, speed, miles, GPS_x, GPS_y = data
 
     # Calculate current race time
-    if racing and timestamp is not None and when_race_started is not None:
+    if racing and timestamp is not None:
         racetime = timestamp - when_race_started
 
         # Calculate racetime_minutes if needed
@@ -93,7 +93,7 @@ def getdata():
             racetime = format(racetime, ".1f")
 
     # Calculate current lap time
-    if racing and timestamp is not None and when_race_started is not None:
+    if racing and timestamp is not None:
         laptime = timestamp - when_race_started - sum(prev_laptimes)
     else:
         laptime = None
