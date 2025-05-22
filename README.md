@@ -41,7 +41,7 @@ On the Base Station:
 
 On the Car: `source [envname]/bin/activate && python collector.py`
 
-On the Base Station: `sudo ./startup.sh` 
+On the Base Station: `sudo ./startup.sh`
 
 **Service files are available for running on startup**
 
@@ -51,7 +51,7 @@ On the Base Station: `sudo ./startup.sh`
 
 3. Ensure that the service is running with `systemctl status [service name]`
 
-> **Note:** The car's service runs a button manager, but should still start automatically.
+> **Note:** The car's service runs a button manager, but should still start collecting data automatically.
 
 #
 
