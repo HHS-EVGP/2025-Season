@@ -1,3 +1,4 @@
 .vscode/
 pyenv/
 BaseStation/frontend/__pycache__
+raceStart.pkl

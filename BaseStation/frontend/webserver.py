@@ -7,22 +7,38 @@ import time
 import socket
 import select
 import pickle
+import os
 
 app = Flask(__name__)
 
 ## Global variables ##
 dbpath = "BaseStation/EVGPTelemetry.sqlite"
 authedusrs = []
-authcode = "hhsevgp"  # Make this whatever you like
+authcode = "hhsevgp" # Make this whatever you like
 
-laps = 0
+laps = None
 laptime = None
 prev_laptimes = []
 
 racing = False
-when_race_started = None
 racetime = None
 racetime_minutes = None
+
+# Restore pickled when_race_stared if applicable
+if os.path.exists("raceStart.pkl"):
+    with open("raceStart.pkl", "rb") as file:
+        try:
+            when_race_started = pickle.load(file)
+
+            # If we restored an actual value, set racing to true (we were racing)
+            if when_race_started is not None:
+                racing = True
+
+        except Exception as e:
+            print("Error unpickling when_race_started:", e)
+            when_race_started = None
+else:
+    when_race_started = None
 
 # Set up a global connection to the socket
 SOCKETPATH = "/tmp/telemSocket"
@@ -70,7 +86,7 @@ def getdata():
             racetime_minutes = str(format(racetime_minutes, ".0f"))+":"
 
         # Format racetime
-        if racetime < 10:
+        if racetime < 10 and racetime_minutes is not None:
             racetime = format(racetime, ".1f")
             racetime = "0"+str(racetime)
         else:
@@ -119,7 +135,7 @@ def usrauth():
             authedusrs.append(request.remote_addr)
         return ('', 200)
     else:
-        return 'Invalid authentication code', 401
+        return ('Invalid authentication code', 401)
 
 
 # Respond to an updated variable
@@ -180,18 +196,32 @@ def usrupdate():
             racetime_minutes = None
             when_race_started = None
 
+            # Write file dump as None
+            with open("raceStart.pkl", "wb") as file:
+                pickle.dump(when_race_started, file)
+
 
             return ('', 200)
 
         else:
-            racing = True
-
+            # Tie when_race_started to the latest timestamp in the database
             cur.execute("SELECT MAX(time) FROM main")
             when_race_started = cur.fetchone()[0]
 
             # If noting in the database, use the socket value
             if when_race_started == None:
                 when_race_started = timestamp
+
+            # If nothing form the socket, retrun an error
+            if when_race_started == None:
+                return ("No data! Unable to start race", 422)
+
+            # Write when_race_started to a file for backup
+            with open("raceStart.pkl", "wb") as file:
+                pickle.dump(when_race_started, file)
+
+            racing = True
+            laps = 0
 
             return ('', 200)
 

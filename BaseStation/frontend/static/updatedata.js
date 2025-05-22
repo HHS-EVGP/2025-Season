@@ -111,12 +111,22 @@ function authenticateLapControls(code) {
 
 // Update a variable on the server
 function updateServerVariable(updatecode) {
+  // Hide data warning if needed
+  document.getElementById('nodatawarn').style.display = 'none';
+
   fetch('/usrupdate', {
     method: 'POST',
     body: updatecode,
   })
+    // If no data to start race with, display warning
+    .then(response => {
+      if (response.status === 422) {
+        document.getElementById('nodatawarn').style.display = 'block';
+      }
+    });
 }
 
+// Play the lap sound
 function playLapSound() {
   if (window.racing ?? false == true) {
     document.getElementById('lapsound').play();
@@ -225,7 +235,7 @@ function countRaceTime() {
     const racetime_minutesElem = document.getElementById('racetime_minutes')
 
     let racetime = parseFloat(racetimeElem.textContent) ?? 0;
-    let racetime_minutes = racetime_minutesElem.textContent ?? 0;
+    let racetime_minutes = racetime_minutesElem.textContent;
 
     racetime += 0.1;
 
@@ -245,7 +255,7 @@ function countRaceTime() {
     }
 
     // Clean view
-    if (racetime < 10) {
+    if (racetime < 10 && racetime_minutes != 0) {
       racetime = '0' + racetime.toFixed(1);
     }
     else {
@@ -270,4 +280,5 @@ window.addEventListener('resize', startCharts);
 document.addEventListener('DOMContentLoaded', () => {
   document.getElementById('lapcontrols').style.display = 'none';
   document.getElementById('autherror').style.display = 'none';
+  document.getElementById('nodatawarn').style.display = 'none';
 });

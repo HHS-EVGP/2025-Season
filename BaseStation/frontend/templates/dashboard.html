@@ -121,7 +121,7 @@
                   <input type="text" id="accessCode" name="accessCode" required oninput="code = this.value"
                     class="form-control bg-dark text-white border-secondary">
                   <div style="color: red;" id="autherror">Incorrect Access Code</div>
-              
+
               </div>
               <div class="modal-footer border-secondary">
                 <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
@@ -138,6 +138,7 @@
           <button onclick="updateServerVariable('lap+'); playLapSound()">Lap+</button>
           <button id="racing" data-bs-toggle="modal" data-bs-target="#startstopmodal">Start Race</button>
         </span>
+        <p style="font-size: 1em; color: red;" id="nodatawarn">No data! Unable to start race.</p>
 
         <!--Modal to confirm race start/stop-->
         <div class="modal fade" id="startstopmodal" tabindex="-1" aria-hidden="true">
@@ -153,7 +154,7 @@
               <div class="modal-body text-start">
                 Are you sure you want to <span id='startorstop'></span> race?
               </div>
-              
+
               <div class="modal-footer border-secondary">
                 <button class="btn btn-secondary" data-bs-dismiss="modal">No</button>
                 <button onclick="updateServerVariable('togglerace')" data-bs-dismiss="modal"
