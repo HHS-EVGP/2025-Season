@@ -51,10 +51,10 @@ print("Client connected.")
 
 while True:
     # Randomize socket data
-    values = [random.uniform(0.0, 100.0) for i in range(15)]
+    values = [time.time()] + [random.uniform(0.0, 100.0) for i in range(14)]
 
     # send data
     data = pickle.dumps(values)
     sock.sendall(data)
 
-    time.sleep(0.5)
+    time.sleep(0.25)

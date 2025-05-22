@@ -4,7 +4,7 @@ function startCharts() {
     .then(response => response.json())
     .then(data => {
 
-      //Destroy old charts if they exist
+      // Destroy old charts if they exist
       if (window.throttleBrakeChart instanceof Chart) {
         window.throttleBrakeChart.destroy();
       }
@@ -117,6 +117,11 @@ function updateServerVariable(updatecode) {
   })
 }
 
+function playLapSound() {
+  if (window.racing ?? false == true) {
+    document.getElementById('lapsound').play();
+  }
+}
 
 // Update data
 function updateData() {
@@ -157,13 +162,19 @@ function updateData() {
       document.getElementById('speed').textContent = data.speed ?? 'NNN';
       document.getElementById('miles').textContent = data.miles ?? 'NNN.NNN';
 
-      // Laps and pace
-      document.getElementById('laps').textContent = data.laps ?? 'XX';
-      document.getElementById('laptime').textContent = data.laptime ?? 'NNN';
-      document.getElementById('targetlaptime').textContent = data.targetlaptime ?? 'NNN';
+      // Timimg
+      document.getElementById('laps').textContent = data.laps ?? 'NN';
+      document.getElementById('laptime').textContent = data.laptime ?? 'NNN'
+      document.getElementById('lastlaptime').textContent = data.lastlaptime ?? 'NNN';
+      document.getElementById('racetime').textContent = data.racetime ?? 'NNN';
 
-      //Amp hours remaining in lap
-      document.getElementById('capbudget').textContent = data.capbudget ?? 'NNN.NNN';
+      // If racetime_minutes is not 0, display it
+      if (data.racetime_minutes != 0) {
+        document.getElementById('racetime_minutes').textContent = data.racetime_minutes;
+      }
+
+      // Make data.racing a global variable
+      window.racing = data.racing;
 
       // Start/stop race button
       const racing = data.racing ?? false;
@@ -184,17 +195,69 @@ function updateData() {
         y: data.GPS_y
       });
 
-      // Limit the number of points in the scatter plot
-      if (window.gpsChart.data.datasets[0].data.length > data.maxgpspoints ?? 100) {
-        window.gpsChart.data.datasets[0].data.shift();
-      }
-
       window.gpsChart.update();
 
     });
 }
 setInterval(updateData, 250); // Update every 250ms
 
+
+// Functions to count the clock
+function countLapTime() {
+  if (window.racing == true) {
+    const laptimeElem = document.getElementById('laptime');
+    let laptime = parseFloat(laptimeElem.textContent) ?? 0;
+    laptime += 0.1;
+
+    // Clean view
+    laptime = laptime.toFixed(1);
+
+    laptimeElem.textContent = laptime;
+  }
+}
+setInterval(countLapTime, 100);
+
+function countRaceTime() {
+  if (window.racing == true) {
+    const racetimeElem = document.getElementById('racetime');
+    const racetime_minutesElem = document.getElementById('racetime_minutes')
+
+    let racetime = parseFloat(racetimeElem.textContent) ?? 0;
+    let racetime_minutes = racetime_minutesElem.textContent ?? 0;
+
+    racetime += 0.1;
+
+    // If racetime_minutes is nothing, treat it as 0
+    if (racetime_minutes == "") {
+      racetime_minutes = 0;
+    }
+    else {
+      racetime_minutes = parseFloat(racetime_minutes);
+    }
+
+    // If racetime >= 60, add it to minutes
+    if (racetime >= 60) {
+      let minutes2add = Math.floor(racetime / 60);
+      racetime_minutes += minutes2add;
+      racetime -= minutes2add * 60
+    }
+
+    // Clean view
+    if (racetime < 10) {
+      racetime = '0' + racetime.toFixed(1);
+    }
+    else {
+      racetime = racetime.toFixed(1)
+    }
+
+    // Update values
+    racetimeElem.textContent = racetime;
+    if (racetime_minutes != 0) {
+      racetime_minutesElem.textContent = racetime_minutes + ":";
+    }
+  }
+}
+setInterval(countRaceTime, 100);
 
 // Call startCharts on window load and resize
 window.addEventListener('load', startCharts);

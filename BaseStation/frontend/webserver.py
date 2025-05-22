@@ -19,13 +19,10 @@ laps = 0
 laptime = None
 prev_laptimes = []
 
-target_laptime = None
-capacity_budget = None
-last_amp_hours = None
-
-max_gps_points = 300
 racing = False
 when_race_started = None
+racetime = None
+racetime_minutes = None
 
 # Set up a global connection to the socket
 SOCKETPATH = "/tmp/telemSocket"
@@ -38,14 +35,13 @@ lastSocketDump = [None] * 15  # * Data columns
 # Function to clean up data for display
 def clean_view(var):
     if var != None and var != 'Error':
-        var = round(var, 3)
-        var = format(var, ".3f") # Add trailing zeros to ensure lenth stays the same
+        var = format(var, ".3f")
     return var
 
 # Page to serve a json with data
 @app.route("/getdata")
 def getdata():
-    global lastSocketDump, laptime, racing, when_race_started, prev_laptimes, last_amp_hours, capacity_budget, timestamp
+    global lastSocketDump, laptime, racing, when_race_started, racetime, racetime_minutes, prev_laptimes, timestamp
 
     # See if new data is available
     readable, _, _ = select.select([socketConn], [], [], 0)
@@ -61,9 +57,24 @@ def getdata():
     timestamp, throttle, brake_pedal, motor_temp, batt_1, batt_2, batt_3, batt_4, \
         amp_hours, voltage, current, speed, miles, GPS_x, GPS_y = data
 
-    # Remove the difference of last_amp_hours and amp_hours from capacity_budget
-    if capacity_budget is not None and capacity_budget is not "Error":
-        capacity_budget -= (last_amp_hours - amp_hours)
+    # Calculate current race time
+    if racing and timestamp is not None and when_race_started is not None:
+        racetime = timestamp - when_race_started
+
+        # Calculate racetime_minutes if needed
+        if racetime >= 60:
+            racetime_minutes = racetime // 60
+            racetime = racetime - racetime_minutes * 60
+
+            # Convert racetime minutes to M:
+            racetime_minutes = str(format(racetime_minutes, ".0f"))+":"
+
+        # Format racetime
+        if racetime < 10:
+            racetime = format(racetime, ".1f")
+            racetime = "0"+str(racetime)
+        else:
+            racetime = format(racetime, ".1f")
 
     # Calculate current lap time
     if racing and timestamp is not None and when_race_started is not None:
@@ -73,7 +84,7 @@ def getdata():
 
     return jsonify(
         systime=datetime.now().strftime("%H:%M:%S"),
-        timestamp=clean_view(timestamp),
+        timestamp=time.strftime("%H:%M:%S", time.localtime(float(clean_view(timestamp)))),
         throttle=clean_view(throttle),
         brake_pedal=clean_view(brake_pedal),
         motor_temp=clean_view(motor_temp),
@@ -89,10 +100,10 @@ def getdata():
         GPS_x=clean_view(GPS_x),
         GPS_y=clean_view(GPS_y),
         laps=laps,
-        laptime=clean_view(laptime),
-        maxgpspoints=max_gps_points,
-        targetlaptime=clean_view(target_laptime),
-        capbudget=clean_view(capacity_budget),
+        laptime=format(laptime, ".1f") if laptime is not None else None,
+        lastlaptime=format(prev_laptimes[-1], ".1f") if sum(prev_laptimes) is not 0 else None,
+        racetime=racetime,
+        racetime_minutes=racetime_minutes,
         racing=racing
     )
 
@@ -111,67 +122,17 @@ def usrauth():
         return 'Invalid authentication code', 401
 
 
-def calc_pace(cur):
-    global target_laptime, capacity_budget, laptime, when_race_started, laps, timestamp
-
-    battery_capacity  = 21 # Battery limit in amp hours
-
-    ### Calculate target lap time ###
-    # (What speed we need to go to use our whole battery in an hour)
-    try:
-        # Find the average speed where current is close to 18.5
-        cur.execute("""
-            SELECT AVG(speed)
-            FROM main
-            WHERE time > ?
-                AND laps > ?
-                AND current BETWEEN ? AND ?
-        """, [when_race_started, laps - 5, battery_capacity - 0.5, battery_capacity + 0.5]) # Look at the last 5 laps in this race
-        optimalSpeed = cur.fetchone()[0]
-
-        # Find average speed over the last lap
-        cur.execute("""
-            SELECT AVG(speed)
-            FROM main
-            WHERE laps = ?
-        """, [laps])
-        averageSpeed = cur.fetchone()[0]
-
-        # Get the "authoritative" lap time based on the database
-        cur.execute("""
-            SELECT MAX(time) - MIN(time)
-            FROM main
-            WHERE time > ? AND laps IS ?""", [when_race_started, laps])
-        laptime = cur.fetchone()[0]
-
-        # Calculate lap distance (miles)
-        lapDistance = averageSpeed * laptime / 60
-
-        # Calculate optimal lap time (seconds)
-        target_laptime = lapDistance * (optimalSpeed / 60)
-
-        # Calculate the budget for the lap (amp hours)
-        capacity_budget = (((when_race_started + 3600) - timestamp)  / target_laptime) * battery_capacity
-        # Seconds left in the race / target laptime, * battery capacity
-
-    except Exception as e:
-        print("Error calculating target lap time:", e)
-        target_laptime = "Error"
-        capacity_budget = "Error"
-
-
 # Respond to an updated variable
 @app.route("/usrupdate", methods=['POST'])
 def usrupdate():
-    global authedusrs, laps, laptime, prev_laptimes, racing, when_race_started, target_laptime, capacity_budget, max_gps_points
+    global authedusrs, laps, laptime, prev_laptimes, racing, when_race_started, racetime, racetime_minutes
 
     # Check if the user is authenticated
     if request.remote_addr not in authedusrs:
         return 'User not authenticated', 401
 
-    command = request.get_data(as_text=True)
-
     # Check for command
+    command = request.get_data(as_text=True)
     if not command:
         return 'No variable update command', 400
 
@@ -183,16 +144,6 @@ def usrupdate():
         cur.execute("UPDATE main SET laps = ? WHERE time > ? AND laps IS NULL"
         ,[laps, when_race_started])
         con.commit()
-
-        calc_pace(cur)
-
-        # Find the number of data points in the last lap, and use that to know when to expire points in the scatter plot
-        cur.execute("""
-            SELECT COUNT(*)
-            FROM main
-            WHERE laps = ?"""
-                ,[laps])
-        max_gps_points = 2 * cur.fetchone()[0]
 
         # Increment the lap number
         laps += 1
@@ -212,9 +163,6 @@ def usrupdate():
 
             laps -= 1
 
-            # Revert the current pace to the previous lap time
-            calc_pace(cur)
-
             # Remove the previous lap time from the list
             prev_laptimes.pop()
 
@@ -228,9 +176,10 @@ def usrupdate():
             laps = 0
             laptime = None
             prev_laptimes = []
-            target_laptime = None
+            racetime = None
+            racetime_minutes = None
             when_race_started = None
-            capacity_budget = None
+
 
             return ('', 200)
 
@@ -239,6 +188,10 @@ def usrupdate():
 
             cur.execute("SELECT MAX(time) FROM main")
             when_race_started = cur.fetchone()[0]
+
+            # If noting in the database, use the socket value
+            if when_race_started == None:
+                when_race_started = timestamp
 
             return ('', 200)
 

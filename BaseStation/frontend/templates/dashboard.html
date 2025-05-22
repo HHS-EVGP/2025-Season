@@ -13,6 +13,7 @@
   <!--Custom Stuff-->
   <link href="{{ url_for('static', filename='style.css') }}" rel="stylesheet">
   <script src="{{ url_for('static', filename='updatedata.js') }}"></script>
+  <audio id="lapsound" src="{{ url_for('static', filename='lapsound.mp3') }}"></audio>
 
 </head>
 
@@ -72,8 +73,8 @@
         <br>
 
         <div class="bordered">
-          <p id="capbudget" class="bignum data"></p>
-          <p>Lap's A⋅h Budget</p>
+          <p class="bignum data"> <span id="racetime_minutes"></span><span id="racetime"></span> </p>
+          <p>Race Time</p>
         </div>
 
       </div>
@@ -132,14 +133,14 @@
         <!--Lap controls to be shown when acess code entered-->
         <span id="lapcontrols">
           <button onclick="updateServerVariable('lap-')">Lap-</button>
-          <button onclick="updateServerVariable('lap+')">Lap+</button>
+          <button onclick="updateServerVariable('lap+'); playLapSound()">Lap+</button>
           <button id="racing" onclick="updateServerVariable('togglerace')">Start Race</button>
         </span>
 
         <div class="bordered">
           <p>Laps: <span id="laps" class="data"></span></p>
           <p>Lap Time: <span id="laptime" class="data"></span>s</p>
-          <p>Target Lap Time: <span id="targetlaptime" class="data"></span>s</p>
+          <p>Last Lap Time: <span id="lastlaptime" class="data"></span>s</p>
         </div>
 
       </div>
